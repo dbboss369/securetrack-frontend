@@ -3,6 +3,8 @@ import { ArrowLeftIcon, LockClosedIcon, LockOpenIcon, EyeIcon, EyeSlashIcon } fr
 import TelemetryChart from './TelemetryChart';
 import BlockchainInfo from './BlockchainInfo';
 import { hybridDecrypt } from '../utils/hybridEncryption';
+import { API_URL } from '../config';
+
 
 const ShipmentDetailsPanel = ({ shipment }) => {
   const [telemetry, setTelemetry] = useState([]);
@@ -12,6 +14,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
   const [decryptError, setDecryptError] = useState(null);
   const [user, setUser] = useState(null);
 
+
   // Get user from localStorage
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -19,6 +22,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
       setUser(JSON.parse(stored));
     }
   }, []);
+
 
   // Fetch telemetry data when shipment changes
   useEffect(() => {
@@ -30,10 +34,11 @@ const ShipmentDetailsPanel = ({ shipment }) => {
     }
   }, [shipment]);
 
+
   const fetchTelemetry = async (shipmentId) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/shipments/${shipmentId}/telemetry`);
+      const res = await fetch(`${API_URL}/api/shipments/${shipmentId}/telemetry`);
       const data = await res.json();
       setTelemetry(data);
     } catch (err) {
@@ -43,6 +48,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
     }
   };
 
+
   // Decrypt shipment details using hybrid encryption
   const handleDecrypt = async () => {
     if (!shipment?.encryptedDetails || !shipment?.encryptedKey) {
@@ -50,8 +56,10 @@ const ShipmentDetailsPanel = ({ shipment }) => {
       return;
     }
 
+
     setDecrypting(true);
     setDecryptError(null);
+
 
     try {
       // Get private key from localStorage
@@ -63,9 +71,11 @@ const ShipmentDetailsPanel = ({ shipment }) => {
         return;
       }
 
+
       console.log('🔓 Starting hybrid decryption...');
       console.log('   Encrypted data length:', shipment.encryptedDetails.length);
       console.log('   Encrypted key length:', shipment.encryptedKey.length);
+
 
       // Use the hybridDecrypt function from your utility
       const decryptedString = hybridDecrypt(
@@ -74,11 +84,13 @@ const ShipmentDetailsPanel = ({ shipment }) => {
         privateKey                   // Hospital's RSA private key (PEM)
       );
 
+
       console.log('✅ Decryption successful!');
       
       // Parse JSON
       const decrypted = JSON.parse(decryptedString);
       setDecryptedData(decrypted);
+
 
     } catch (error) {
       console.error('❌ Decryption error:', error);
@@ -88,13 +100,16 @@ const ShipmentDetailsPanel = ({ shipment }) => {
     }
   };
 
+
   const handleHideDetails = () => {
     setDecryptedData(null);
     setDecryptError(null);
   };
 
+
   const isHospital = user?.role === 'hospital';
   const hasEncryptedDetails = shipment?.encryptedDetails && shipment?.encryptedKey;
+
 
   if (!shipment) {
     return (
@@ -111,6 +126,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
       </div>
     );
   }
+
 
   return (
     <div style={{
@@ -130,6 +146,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
           </div>
         </div>
 
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '14px', color: 'var(--muted)' }}>Shipment ID:</span>
           <span style={{ fontWeight: '500', color: 'var(--primary)' }}>{shipment.shipmentId}</span>
@@ -146,8 +163,10 @@ const ShipmentDetailsPanel = ({ shipment }) => {
         </div>
       </div>
 
+
       {/* Content */}
       <div style={{ flex: 1, overflow: 'auto' }}>
+
 
         {/* DECRYPTION PANEL - HYBRID ENCRYPTION */}
         {isHospital && hasEncryptedDetails && (
@@ -177,6 +196,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                 </>
               )}
             </h3>
+
 
             {!decryptedData ? (
               <div>
@@ -212,6 +232,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                   {decrypting ? 'Decrypting...' : 'View Secure Details'}
                 </button>
 
+
                 {decryptError && (
                   <div style={{
                     marginTop: '12px',
@@ -241,12 +262,14 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                     </p>
                   </div>
 
+
                   <div style={{ marginBottom: '12px' }}>
                     <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>Batch Number</p>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
                       {decryptedData.batchNumber || 'N/A'}
                     </p>
                   </div>
+
 
                   {decryptedData.quantity && (
                     <div style={{ marginBottom: '12px' }}>
@@ -257,6 +280,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                     </div>
                   )}
 
+
                   {decryptedData.internalNote && (
                     <div>
                       <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>Internal Notes</p>
@@ -266,6 +290,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                     </div>
                   )}
                 </div>
+
 
                 <button
                   onClick={handleHideDetails}
@@ -293,6 +318,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
           </div>
         )}
 
+
         {/* Temperature Chart */}
         {telemetry.length > 0 && (
           <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
@@ -300,12 +326,15 @@ const ShipmentDetailsPanel = ({ shipment }) => {
           </div>
         )}
 
+
         {/* Blockchain Verification */}
         <BlockchainInfo shipmentId={shipment.shipmentId} />
+
 
         {/* Shipment Details */}
         <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '16px' }}>Shipment Information</h3>
+
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '14px' }}>
             <div>
@@ -330,6 +359,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
             </div>
           </div>
 
+
           <div style={{ marginTop: '16px' }}>
             <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '4px' }}>Temperature</p>
             <p style={{ fontWeight: '500', color: 'var(--text)', margin: 0 }}>
@@ -337,13 +367,16 @@ const ShipmentDetailsPanel = ({ shipment }) => {
             </p>
           </div>
 
+
           {/* ❌ REMOVED: Humidity display */}
         </div>
+
 
         {/* Telemetry Table */}
         {telemetry.length > 0 && (
           <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '16px' }}>Recent Telemetry Data</h3>
+
 
             <div style={{ maxHeight: '200px', overflow: 'auto' }}>
               <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
@@ -376,6 +409,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
           </div>
         )}
 
+
         {/* Loading State */}
         {loading && (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>
@@ -386,5 +420,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
     </div>
   );
 };
+
 
 export default ShipmentDetailsPanel;

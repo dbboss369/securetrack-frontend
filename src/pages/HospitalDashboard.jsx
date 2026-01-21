@@ -9,6 +9,8 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_URL } from '../config';
+
 
 const HospitalDashboard = () => {
   const [stats, setStats] = useState({
@@ -20,11 +22,13 @@ const HospitalDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
+
 
     const fetchStats = async () => {
       try {
@@ -36,8 +40,10 @@ const HospitalDashboard = () => {
           return;
         }
 
+
         const parsedUser = JSON.parse(stored);
         const token = parsedUser?.token;
+
 
         if (!token) {
           console.error('No token on stored user');
@@ -45,11 +51,14 @@ const HospitalDashboard = () => {
           return;
         }
 
-        const response = await axios.get('http://localhost:4000/api/stats', {
+
+        const response = await axios.get(`${API_URL}/api/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+
         const data = response.data;
+
 
         // Backend returns { total, inTransit, delivered, pending, issues }
         setStats({
@@ -65,8 +74,10 @@ const HospitalDashboard = () => {
       }
     };
 
+
     fetchStats();
   }, []);
+
 
   const quickStats = [
     { 
@@ -103,9 +114,11 @@ const HospitalDashboard = () => {
     }
   ];
 
+
   if (loading) {
     return <LoadingSpinner />;
   }
+
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)', overflow: 'auto' }}>
@@ -120,6 +133,7 @@ const HospitalDashboard = () => {
           </p>
         </div>
       </div>
+
 
       {/* Main Content */}
       <div style={{ flex: 1, padding: '24px' }}>
@@ -190,5 +204,6 @@ const HospitalDashboard = () => {
     </div>
   );
 };
+
 
 export default HospitalDashboard;

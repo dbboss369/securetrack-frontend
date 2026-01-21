@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { hybridEncrypt } from '../utils/hybridEncryption';
+import { API_URL } from '../config';
+
 
 const CreateShipmentPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
 
   const [formData, setFormData] = useState({
     vaccine: '',
@@ -18,6 +21,7 @@ const CreateShipmentPage = () => {
     internalNote: '',
   });
 
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -25,10 +29,12 @@ const CreateShipmentPage = () => {
     });
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
 
     try {
       const stored = localStorage.getItem('user');
@@ -38,8 +44,10 @@ const CreateShipmentPage = () => {
         return;
       }
 
+
       const user = JSON.parse(stored);
       const token = user?.token;
+
 
       if (!token) {
         setError('Missing auth token. Please log in again.');
@@ -47,9 +55,10 @@ const CreateShipmentPage = () => {
         return;
       }
 
+
       // Get hospital public key
       const hospitalRes = await axios.get(
-        `http://localhost:4000/api/users/hospital/${encodeURIComponent(
+        `${API_URL}/api/users/hospital/${encodeURIComponent(
           formData.destination
         )}`,
         {
@@ -59,13 +68,16 @@ const CreateShipmentPage = () => {
         }
       );
 
+
       const { publicKey, walletAddress } = hospitalRes.data;
+
 
       if (!publicKey) {
         setError('Destination hospital does not have a public key configured.');
         setLoading(false);
         return;
       }
+
 
       // Prepare sensitive data
       const sensitivePayload = {
@@ -78,6 +90,7 @@ const CreateShipmentPage = () => {
         hospitalWallet: walletAddress,
       };
 
+
       console.log('Encrypting with hybrid encryption...');
       
       // Use hybrid encryption (AES + RSA)
@@ -86,11 +99,13 @@ const CreateShipmentPage = () => {
         publicKey
       );
 
+
       console.log('Encryption successful! Sending to backend...');
+
 
       // Send to backend
       await axios.post(
-        'http://localhost:4000/api/create-shipment',
+        `${API_URL}/api/create-shipment`,
         {
           vaccine: formData.vaccine,
           origin: formData.origin,
@@ -110,6 +125,7 @@ const CreateShipmentPage = () => {
         }
       );
 
+
       console.log('✅ Shipment created successfully!');
       navigate('/dashboard/shipments');
     } catch (err) {
@@ -119,6 +135,7 @@ const CreateShipmentPage = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <motion.div
@@ -154,6 +171,7 @@ const CreateShipmentPage = () => {
           Create Shipment
         </h1>
 
+
         {error && (
           <div
             style={{
@@ -168,6 +186,7 @@ const CreateShipmentPage = () => {
             {error}
           </div>
         )}
+
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
@@ -199,6 +218,7 @@ const CreateShipmentPage = () => {
             />
           </div>
 
+
           <div style={{ marginBottom: '16px' }}>
             <label
               style={{
@@ -227,6 +247,7 @@ const CreateShipmentPage = () => {
               }}
             />
           </div>
+
 
           <div style={{ marginBottom: '16px' }}>
             <label
@@ -257,6 +278,7 @@ const CreateShipmentPage = () => {
             />
           </div>
 
+
           <div style={{ marginBottom: '16px' }}>
             <label
               style={{
@@ -284,6 +306,7 @@ const CreateShipmentPage = () => {
               }}
             />
           </div>
+
 
           <div style={{ marginBottom: '16px' }}>
             <label
@@ -314,6 +337,7 @@ const CreateShipmentPage = () => {
             />
           </div>
 
+
           <div style={{ marginBottom: '24px' }}>
             <label
               style={{
@@ -343,6 +367,7 @@ const CreateShipmentPage = () => {
             />
           </div>
 
+
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               type="submit"
@@ -361,6 +386,7 @@ const CreateShipmentPage = () => {
             >
               {loading ? 'Creating...' : 'Create Shipment'}
             </button>
+
 
             <button
               type="button"
@@ -384,5 +410,6 @@ const CreateShipmentPage = () => {
     </motion.div>
   );
 };
+
 
 export default CreateShipmentPage;

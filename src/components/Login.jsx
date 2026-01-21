@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { API_URL } from '../config';
+
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -8,26 +10,32 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+
     console.log('🔐 Login attempt:', email);
 
+
     try {
-      const res = await fetch('http://localhost:4000/api/auth/login', {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
 
+
       const data = await res.json();
       console.log('Response:', data);
+
 
       if (!res.ok) {
         throw new Error(data.error || 'Login failed');
       }
+
 
       // ✅ Store user WITH token
       const userWithToken = {
@@ -35,8 +43,10 @@ const Login = () => {
         token: data.token
       };
 
+
       localStorage.setItem('user', JSON.stringify(userWithToken));
       console.log('✅ Navigating to dashboard...');
+
 
       navigate('/dashboard');
     } catch (err) {
@@ -46,6 +56,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div style={{
@@ -87,6 +98,7 @@ const Login = () => {
           </p>
         </div>
 
+
         {error && (
           <div style={{
             padding: '12px',
@@ -100,6 +112,7 @@ const Login = () => {
             ❌ {error}
           </div>
         )}
+
 
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '16px' }}>
@@ -123,6 +136,7 @@ const Login = () => {
             />
           </div>
 
+
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#333' }}>
               Password
@@ -144,6 +158,7 @@ const Login = () => {
             />
           </div>
 
+
           <button
             type="submit"
             disabled={loading}
@@ -163,6 +178,7 @@ const Login = () => {
           </button>
         </form>
 
+
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#666' }}>
           Don't have an account?{' '}
           <Link to="/signup" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>
@@ -173,5 +189,6 @@ const Login = () => {
     </div>
   );
 };
+
 
 export default Login;

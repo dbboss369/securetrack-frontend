@@ -9,6 +9,8 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_URL } from '../config';
+
 
 const ManufacturerDashboard = () => {
   const [stats, setStats] = useState({
@@ -20,11 +22,13 @@ const ManufacturerDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
+
 
     const fetchStats = async () => {
       try {
@@ -35,8 +39,10 @@ const ManufacturerDashboard = () => {
           return;
         }
 
+
         const parsedUser = JSON.parse(stored);
         const token = parsedUser?.token;
+
 
         if (!token) {
           console.error('No token on stored user');
@@ -44,11 +50,14 @@ const ManufacturerDashboard = () => {
           return;
         }
 
-        const response = await axios.get('http://localhost:4000/api/stats', {
+
+        const response = await axios.get(`${API_URL}/api/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+
         const data = response.data;
+
 
         setStats({
           total: data.total || data.totalShipments || 0,
@@ -63,8 +72,10 @@ const ManufacturerDashboard = () => {
       }
     };
 
+
     fetchStats();
   }, []);
+
 
   const quickStats = [
     { 
@@ -101,9 +112,11 @@ const ManufacturerDashboard = () => {
     }
   ];
 
+
   if (loading) {
     return <LoadingSpinner />;
   }
+
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)', overflow: 'auto' }}>
@@ -118,6 +131,7 @@ const ManufacturerDashboard = () => {
           </p>
         </div>
       </div>
+
 
       {/* Main Content */}
       <div style={{ flex: 1, padding: '24px' }}>
@@ -188,5 +202,6 @@ const ManufacturerDashboard = () => {
     </div>
   );
 };
+
 
 export default ManufacturerDashboard;

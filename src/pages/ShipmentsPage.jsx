@@ -1,11 +1,14 @@
 // src/pages/ShipmentsPage.jsx
 
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import MainContent from '../components/MainContent';
 import ShipmentDetailsPanel from '../components/ShipmentDetailsPanel';
 import { getShipments, getStats } from '../services/api';
 import axios from 'axios';
+import { API_URL } from '../config';
+
 
 const ShipmentsPage = () => {
   const [shipments, setShipments] = useState([]);
@@ -15,6 +18,7 @@ const ShipmentsPage = () => {
   const [user, setUser] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -23,6 +27,7 @@ const ShipmentsPage = () => {
     loadData();
   }, []);
 
+
   async function loadData() {
     try {
       const [shipmentsData, statsData] = await Promise.all([
@@ -30,8 +35,10 @@ const ShipmentsPage = () => {
         getStats()
       ]);
 
+
       setShipments(shipmentsData);
       setStats(statsData);
+
 
       if (shipmentsData.length > 0) {
         setSelectedShipment(shipmentsData[0]);
@@ -43,16 +50,19 @@ const ShipmentsPage = () => {
     }
   }
 
+
   // Hospital confirmation: mark a shipment as received (Delivered)
   const handleMarkReceived = async (shipmentId) => {
     try {
       setUpdatingId(shipmentId);
+
 
       const stored = localStorage.getItem('user');
       if (!stored) {
         console.error('No user in localStorage');
         return;
       }
+
 
       const parsedUser = JSON.parse(stored);
       const token = parsedUser?.token;
@@ -61,8 +71,9 @@ const ShipmentsPage = () => {
         return;
       }
 
+
       await axios.put(
-        `http://localhost:4000/api/shipments/${shipmentId}/status`,
+        `${API_URL}/api/shipments/${shipmentId}/status`,
         { status: 'Delivered' },
         {
           headers: {
@@ -72,6 +83,7 @@ const ShipmentsPage = () => {
         }
       );
 
+
       // Refresh data so table + stats + details update
       await loadData();
     } catch (error) {
@@ -80,6 +92,7 @@ const ShipmentsPage = () => {
       setUpdatingId(null);
     }
   };
+
 
   return (
     <motion.div 
@@ -103,5 +116,6 @@ const ShipmentsPage = () => {
     </motion.div>
   );
 };
+
 
 export default ShipmentsPage;

@@ -8,6 +8,8 @@ import {
   InboxIcon
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_URL } from '../config';
+
 
 const AnalyticsPage = () => {
   const [analytics, setAnalytics] = useState({
@@ -21,25 +23,30 @@ const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   useEffect(() => {
     fetchAnalytics();
     const interval = setInterval(fetchAnalytics, 15000);
     return () => clearInterval(interval);
   }, []);
 
+
   const fetchAnalytics = async () => {
     try {
       setError(null);
 
+
       // Fetch telemetry
-      const telRes = await fetch('http://localhost:4000/api/telemetry/all');
+      const telRes = await fetch(`${API_URL}/api/telemetry/all`);
       if (!telRes.ok) throw new Error('Failed to fetch telemetry');
       const allTelemetryData = await telRes.json();
 
+
       // Fetch all shipments
-      const shipRes = await fetch('http://localhost:4000/api/shipments/all');
+      const shipRes = await fetch(`${API_URL}/api/shipments/all`);
       if (!shipRes.ok) throw new Error('Failed to fetch shipments');
       const allShipments = await shipRes.json();
+
 
       if (allShipments.length === 0) {
         setAnalytics({
@@ -54,9 +61,11 @@ const AnalyticsPage = () => {
         return;
       }
 
+
       // Calculate violations
       const violationMap = {};
       const violationDetails = {};
+
 
       allTelemetryData.forEach(reading => {
         if (reading.temperature < 2 || reading.temperature > 8) {
@@ -69,6 +78,7 @@ const AnalyticsPage = () => {
         }
       });
 
+
       const shipmentsWithViolations = allShipments
         .filter(s => violationMap[s.shipmentId])
         .map(s => ({
@@ -78,6 +88,7 @@ const AnalyticsPage = () => {
         }))
         .sort((a, b) => b.violationCount - a.violationCount);
 
+
       const activeShipments = allShipments.filter(
         s => s.status === 'In Transit' || s.status === 'Pending'
       ).length;
@@ -86,10 +97,12 @@ const AnalyticsPage = () => {
         s => s.status === 'Delivered'
       ).length;
 
+
       const totalViolations = Object.values(violationMap).reduce((sum, count) => sum + count, 0);
       const violationRate = allShipments.length > 0 
         ? ((shipmentsWithViolations.length / allShipments.length) * 100).toFixed(1)
         : 0;
+
 
       setAnalytics({
         totalShipments: allShipments.length,
@@ -100,6 +113,7 @@ const AnalyticsPage = () => {
         shipmentsWithViolations
       });
 
+
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setError(true);
@@ -108,11 +122,13 @@ const AnalyticsPage = () => {
     }
   };
 
+
   const exportToCSV = () => {
     if (analytics.shipmentsWithViolations.length === 0) {
       alert('No violation data to export');
       return;
     }
+
 
     const headers = ['Shipment ID', 'Origin', 'Destination', 'Status', 'Violation Count', 'Timestamps'];
     const rows = analytics.shipmentsWithViolations.map(s => [
@@ -124,10 +140,12 @@ const AnalyticsPage = () => {
       s.violations.map(v => new Date(v.timestamp).toLocaleString()).join('; ')
     ]);
 
+
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
+
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -137,7 +155,9 @@ const AnalyticsPage = () => {
     a.click();
   };
 
+
   if (loading) return <LoadingSpinner />;
+
 
   if (error) {
     return (
@@ -154,6 +174,7 @@ const AnalyticsPage = () => {
       </div>
     );
   }
+
 
   if (analytics.totalShipments === 0) {
     return (
@@ -182,6 +203,7 @@ const AnalyticsPage = () => {
     );
   }
 
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)' }}>
       
@@ -208,6 +230,7 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
+
       <div style={{ backgroundColor: 'var(--card)', padding: '24px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
           
@@ -217,11 +240,13 @@ const AnalyticsPage = () => {
             <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#1E3A8A', margin: 0 }}>{analytics.totalShipments}</p>
           </motion.div>
 
+
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             style={{ padding: '20px', backgroundColor: '#FEF3C7', borderRadius: '12px', border: '1px solid #FCD34D' }}>
             <p style={{ fontSize: '13px', color: '#92400E', margin: '0 0 8px 0' }}>Active</p>
             <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#78350F', margin: 0 }}>{analytics.activeShipments}</p>
           </motion.div>
+
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             style={{ padding: '20px', backgroundColor: '#D1FAE5', borderRadius: '12px', border: '1px solid #86EFAC' }}>
@@ -229,11 +254,13 @@ const AnalyticsPage = () => {
             <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#047857', margin: 0 }}>{analytics.completedShipments}</p>
           </motion.div>
 
+
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
             style={{ padding: '20px', backgroundColor: '#FEE2E2', borderRadius: '12px', border: '1px solid #FCA5A5' }}>
             <p style={{ fontSize: '13px', color: '#991B1B', margin: '0 0 8px 0' }}>Total Violations</p>
             <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#7F1D1D', margin: 0 }}>{analytics.totalViolations}</p>
           </motion.div>
+
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
             style={{
@@ -245,8 +272,10 @@ const AnalyticsPage = () => {
             <p style={{ fontSize: '28px', fontWeight: 'bold', color: analytics.violationRate > 10 ? '#7F1D1D' : '#047857', margin: 0 }}>{analytics.violationRate}%</p>
           </motion.div>
 
+
         </div>
       </div>
+
 
       <div style={{ flex: 1, backgroundColor: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
         
@@ -255,6 +284,7 @@ const AnalyticsPage = () => {
             Shipments with Temperature Violations
           </h2>
         </div>
+
 
         <div style={{ flex: 1, overflow: 'auto' }}>
           {analytics.shipmentsWithViolations.length === 0 ? (
@@ -312,5 +342,6 @@ const AnalyticsPage = () => {
     </div>
   );
 };
+
 
 export default AnalyticsPage;

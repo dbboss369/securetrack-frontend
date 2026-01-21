@@ -1,5 +1,7 @@
+import { API_URL } from '../config';
+
 // Base URL for backend API
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = `${API_URL}/api`;
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {

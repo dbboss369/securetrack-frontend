@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { generateKeyPair } from '../utils/encryption';
 import { ethers } from 'ethers';
+import { API_URL } from '../config';
+
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -15,40 +17,49 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+
     console.log('📝 Signup attempt:', formData.email);
+
 
     try {
       let publicKeyPem = null;
       let walletAddress = null;
       let privateKeyPem = null;
 
+
       if (formData.role === 'hospital') {
         const keypair = generateKeyPair();
         publicKeyPem = keypair.publicKey;
         privateKeyPem = keypair.privateKey;
 
+
         if (!window.ethereum) {
           throw new Error('MetaMask is required for hospital registration');
         }
+
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send('eth_requestAccounts', []);
         const signer = await provider.getSigner();
         walletAddress = await signer.getAddress();
 
+
         console.log('🏥 Hospital wallet:', walletAddress);
       }
 
-      const res = await fetch('http://localhost:4000/api/auth/signup', {
+
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -58,24 +69,30 @@ const Signup = () => {
         }),
       });
 
+
       const data = await res.json();
       console.log('Response:', data);
+
 
       if (!res.ok) {
         throw new Error(data.error || 'Signup failed');
       }
 
+
       if (formData.role === 'hospital' && privateKeyPem) {
         localStorage.setItem('hospitalPrivateKey', privateKeyPem);
       }
+
 
       const userWithToken = {
         ...data.user,
         token: data.token,
       };
 
+
       localStorage.setItem('user', JSON.stringify(userWithToken));
       console.log('✅ User stored, navigating to dashboard...');
+
 
       navigate('/dashboard');
     } catch (err) {
@@ -85,6 +102,7 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div
@@ -146,6 +164,7 @@ const Signup = () => {
           </p>
         </div>
 
+
         {error && (
           <div
             style={{
@@ -161,6 +180,7 @@ const Signup = () => {
             ❌ {error}
           </div>
         )}
+
 
         <form onSubmit={handleSignup}>
           <div style={{ marginBottom: '16px' }}>
@@ -193,6 +213,7 @@ const Signup = () => {
             />
           </div>
 
+
           <div style={{ marginBottom: '16px' }}>
             <label
               style={{
@@ -223,6 +244,7 @@ const Signup = () => {
             />
           </div>
 
+
           <div style={{ marginBottom: '16px' }}>
             <label
               style={{
@@ -252,6 +274,7 @@ const Signup = () => {
               }}
             />
           </div>
+
 
           <div style={{ marginBottom: '16px' }}>
             <label
@@ -285,6 +308,7 @@ const Signup = () => {
               <option value="admin">Admin</option>
             </select>
 
+
             {formData.role === 'hospital' && (
               <p
                 style={{
@@ -297,6 +321,7 @@ const Signup = () => {
               </p>
             )}
           </div>
+
 
           <div style={{ marginBottom: '24px' }}>
             <label
@@ -329,6 +354,7 @@ const Signup = () => {
             />
           </div>
 
+
           <button
             type="submit"
             disabled={loading}
@@ -347,6 +373,7 @@ const Signup = () => {
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
+
 
         <p
           style={{
@@ -372,5 +399,6 @@ const Signup = () => {
     </div>
   );
 };
+
 
 export default Signup;

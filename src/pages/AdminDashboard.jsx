@@ -1,5 +1,6 @@
 // src/pages/AdminDashboard.jsx
 
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -11,6 +12,8 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_URL } from '../config';
+
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -20,6 +23,7 @@ const AdminDashboard = () => {
     issues: 0
   });
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -32,8 +36,10 @@ const AdminDashboard = () => {
           return;
         }
 
+
         const user = JSON.parse(stored);
         const token = user?.token;
+
 
         if (!token) {
           console.error('No token on stored user');
@@ -41,11 +47,14 @@ const AdminDashboard = () => {
           return;
         }
 
-        const response = await axios.get('http://localhost:4000/api/stats', {
+
+        const response = await axios.get(`${API_URL}/api/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+
         const data = response.data;
+
 
         // Support both { total,... } and { totalShipments,... }
         setStats({
@@ -61,8 +70,10 @@ const AdminDashboard = () => {
       }
     };
 
+
     fetchStats();
   }, []);
+
 
   const quickStats = [
     { 
@@ -99,9 +110,11 @@ const AdminDashboard = () => {
     }
   ];
 
+
   if (loading) {
     return <LoadingSpinner />;
   }
+
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)', overflow: 'auto' }}>
@@ -116,6 +129,7 @@ const AdminDashboard = () => {
           </p>
         </div>
       </div>
+
 
       {/* Main Content */}
       <div style={{ flex: 1, padding: '24px' }}>
@@ -186,5 +200,6 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
 
 export default AdminDashboard;
