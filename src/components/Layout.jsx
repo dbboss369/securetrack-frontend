@@ -6,7 +6,16 @@ const Layout = () => {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, sans-serif' }}>
       <Sidebar />
-      <Outlet />
+      
+      {/* Main content area with left margin for fixed sidebar */}
+      <div style={{
+        marginLeft: '256px',  // ← ADDED: Match sidebar width
+        flex: 1,              // ← ADDED: Take remaining space
+        overflow: 'auto',     // ← ADDED: Allow scrolling
+        height: '100vh'       // ← ADDED: Full viewport height
+      }}>
+        <Outlet />
+      </div>
     </div>
   );
 };
