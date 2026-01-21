@@ -34,7 +34,7 @@ const Login = () => {
 
 
       const data = await res.json();
-      console.log('Response:', data);
+      console.log('📦 Backend Response:', data);
 
 
 
@@ -44,11 +44,17 @@ const Login = () => {
 
 
 
-      // ✅ Store user WITH token AND privateKey
+      // ✅ Get private key from localStorage (stored during signup)
+      const privateKey = localStorage.getItem('hospitalPrivateKey');
+      console.log('🔑 Private key found in localStorage:', !!privateKey);
+
+
+
+      // ✅ Store user WITH token AND privateKey from localStorage
       const userWithToken = {
         ...data.user,
         token: data.token,
-        privateKey: data.privateKey || data.user?.privateKey  // ADDED: Save private key
+        privateKey: privateKey  // Get from localStorage, not backend!
       };
 
 
