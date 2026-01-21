@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { API_URL } from '../config';
 
 
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,13 +12,16 @@ const Login = () => {
   const navigate = useNavigate();
 
 
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
 
+
     console.log('🔐 Login attempt:', email);
+
 
 
     try {
@@ -28,8 +32,10 @@ const Login = () => {
       });
 
 
+
       const data = await res.json();
       console.log('Response:', data);
+
 
 
       if (!res.ok) {
@@ -37,15 +43,20 @@ const Login = () => {
       }
 
 
-      // ✅ Store user WITH token
+
+      // ✅ Store user WITH token AND privateKey
       const userWithToken = {
         ...data.user,
-        token: data.token
+        token: data.token,
+        privateKey: data.privateKey || data.user?.privateKey  // ADDED: Save private key
       };
 
 
+
       localStorage.setItem('user', JSON.stringify(userWithToken));
+      console.log('✅ User saved with private key:', !!userWithToken.privateKey);
       console.log('✅ Navigating to dashboard...');
+
 
 
       navigate('/dashboard');
@@ -56,6 +67,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
 
   return (
@@ -99,6 +111,7 @@ const Login = () => {
         </div>
 
 
+
         {error && (
           <div style={{
             padding: '12px',
@@ -112,6 +125,7 @@ const Login = () => {
             ❌ {error}
           </div>
         )}
+
 
 
         <form onSubmit={handleLogin}>
@@ -137,6 +151,7 @@ const Login = () => {
           </div>
 
 
+
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#333' }}>
               Password
@@ -159,6 +174,7 @@ const Login = () => {
           </div>
 
 
+
           <button
             type="submit"
             disabled={loading}
@@ -179,6 +195,7 @@ const Login = () => {
         </form>
 
 
+
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#666' }}>
           Don't have an account?{' '}
           <Link to="/signup" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>
@@ -189,6 +206,7 @@ const Login = () => {
     </div>
   );
 };
+
 
 
 export default Login;
