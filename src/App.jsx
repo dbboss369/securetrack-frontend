@@ -8,11 +8,11 @@ import CustomersPage from './pages/CustomersPage';
 import SettingsPage from './pages/SettingsPage';
 import TelemetryPage from './pages/TelemetryPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import UserManagement from './pages/UserManagement';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import CreateShipmentPage from './pages/CreateShipmentPage';
 
-// Protected Route Component using user.token
 const ProtectedRoute = ({ children }) => {
   const stored = localStorage.getItem('user');
   let token = null;
@@ -33,18 +33,38 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const AdminRoute = ({ children }) => {
+  const stored = localStorage.getItem('user');
+  let user = null;
+
+  try {
+    if (stored) {
+      user = JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Error parsing user from localStorage:', e);
+  }
+
+  if (!user?.token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Default redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected Routes */}
         <Route
           path="/dashboard/*"
           element={
@@ -53,7 +73,6 @@ function App() {
             </ProtectedRoute>
           }
         >
-          {/* Nested routes under /dashboard */}
           <Route index element={<DashboardHome />} />
           <Route path="shipments" element={<ShipmentsPage />} />
           <Route path="telemetry" element={<TelemetryPage />} />
@@ -61,9 +80,16 @@ function App() {
           <Route path="customers" element={<CustomersPage />} />
           <Route path="create-shipment" element={<CreateShipmentPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route 
+            path="user-management" 
+            element={
+              <AdminRoute>
+                <UserManagement />
+              </AdminRoute>
+            } 
+          />
         </Route>
 
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

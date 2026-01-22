@@ -7,7 +7,8 @@ import {
   CogIcon,
   ArrowRightOnRectangleIcon,
   SignalIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 import logo from '../assets/logo.svg';
 
@@ -17,45 +18,54 @@ const Sidebar = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Get user info from localStorage
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
   }, []);
 
-  const menuItems = [
+  const baseMenuItems = [
     { path: '/dashboard', icon: HomeIcon, label: 'Home' },
     { path: '/dashboard/shipments', icon: TruckIcon, label: 'Shipments' },
     { path: '/dashboard/telemetry', icon: SignalIcon, label: 'Telemetry' },
     { path: '/dashboard/analytics', icon: ChartBarIcon, label: 'Analytics' },
     { path: '/dashboard/customers', icon: UsersIcon, label: 'Customers' },
-    { path: '/dashboard/settings', icon: CogIcon, label: 'Settings' }
   ];
+
+  const adminMenuItems = [
+    { path: '/dashboard/user-management', icon: UserGroupIcon, label: 'User Management' }
+  ];
+
+  const settingsMenuItem = { path: '/dashboard/settings', icon: CogIcon, label: 'Settings' };
+
+  const menuItems = user?.role === 'admin' 
+    ? [...baseMenuItems, ...adminMenuItems, settingsMenuItem]
+    : [...baseMenuItems, settingsMenuItem];
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('hospitalPrivateKey');
+    localStorage.removeItem('profilePhoto');
     navigate('/login');
   };
 
   return (
     <div style={{ 
       width: '256px', 
-      height: '100vh',            // ← FIXED: Always 100vh
+      height: '100vh',
       backgroundColor: 'var(--primary-800)',
       color: 'white', 
       display: 'flex', 
       flexDirection: 'column',
       borderRight: '1px solid var(--border)',
-      position: 'fixed',          // ← FIXED: Fixed positioning
-      top: 0,                     // ← FIXED: Stick to top
-      left: 0,                    // ← FIXED: Stick to left
-      zIndex: 100,                // ← FIXED: Above other content
-      overflow: 'hidden'          // ← FIXED: No scroll on sidebar itself
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      zIndex: 100,
+      overflow: 'hidden'
     }}>
       
-      {/* Header with Logo */}
       <div style={{ 
         padding: '24px',
         flexShrink: 0
@@ -86,7 +96,6 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Navigation */}
       <div style={{ 
         flex: 1, 
         padding: '0 16px',
@@ -140,7 +149,6 @@ const Sidebar = () => {
           </div>
         </div>
 
-        {/* Logout Button */}
         <button
           onClick={handleLogout}
           style={{
@@ -175,7 +183,6 @@ const Sidebar = () => {
         </button>
       </div>
 
-      {/* User Profile */}
       <div style={{ 
         padding: '24px', 
         borderTop: '1px solid var(--primary-700)',
@@ -193,9 +200,12 @@ const Sidebar = () => {
             fontSize: '16px',
             fontWeight: '600',
             color: 'white',
-            flexShrink: 0
+            flexShrink: 0,
+            backgroundImage: localStorage.getItem('profilePhoto') ? `url(${localStorage.getItem('profilePhoto')})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
           }}>
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
+            {!localStorage.getItem('profilePhoto') && (user?.name?.charAt(0).toUpperCase() || 'U')}
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{ 

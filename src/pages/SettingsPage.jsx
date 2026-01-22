@@ -4,21 +4,22 @@ import {
   ShieldCheckIcon,
   LinkIcon
 } from '@heroicons/react/24/outline';
+import ChangePassword from '../components/ChangePassword';
+import ProfilePhoto from '../components/ProfilePhoto';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [user, setUser] = useState(null);
   const [publicKey, setPublicKey] = useState('');
   const [hasPrivateKey, setHasPrivateKey] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
-    // Load user from localStorage
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
 
-    // Check for encryption keys (for hospitals)
     const hospitalPublicKey = localStorage.getItem('hospitalPublicKey');
     const hospitalPrivateKey = localStorage.getItem('hospitalPrivateKey');
     
@@ -52,16 +53,13 @@ const SettingsPage = () => {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)' }}>
       
-      {/* Header */}
       <div style={{ backgroundColor: 'var(--card)', padding: '24px', borderBottom: '1px solid var(--border)' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>Settings</h1>
         <p style={{ color: 'var(--muted)', margin: '4px 0 0 0', fontSize: '14px' }}>Manage your account settings and preferences</p>
       </div>
 
-      {/* Content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         
-        {/* Sidebar */}
         <div style={{ width: '280px', backgroundColor: 'var(--card)', borderRight: '1px solid var(--border)', padding: '24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {tabs.map((tab) => (
@@ -91,36 +89,17 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Main Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
           
-          {/* Profile Tab */}
           {activeTab === 'profile' && user && (
             <div style={{ maxWidth: '600px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text)', marginBottom: '24px' }}>Profile Information</h2>
               
-              {/* Avatar */}
               <div style={{ marginBottom: '32px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Profile Picture</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ 
-                    width: '80px', 
-                    height: '80px', 
-                    borderRadius: '50%', 
-                    backgroundColor: 'var(--primary)', 
-                    color: 'white', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    fontSize: '32px', 
-                    fontWeight: '600' 
-                  }}>
-                    {user.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                </div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '16px' }}>Profile Picture</label>
+                <ProfilePhoto />
               </div>
 
-              {/* Form Fields */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Full Name</label>
@@ -196,13 +175,11 @@ const SettingsPage = () => {
             </div>
           )}
 
-          {/* Blockchain Tab */}
           {activeTab === 'blockchain' && user && (
             <div style={{ maxWidth: '700px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text)', marginBottom: '24px' }}>Blockchain Configuration</h2>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                {/* Network Info */}
                 <div style={{ padding: '20px', backgroundColor: '#F0F9FF', borderRadius: '12px', border: '1px solid #BFDBFE' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Network Information</h3>
                   
@@ -220,7 +197,6 @@ const SettingsPage = () => {
                   </div>
                 </div>
 
-                {/* Wallet Info */}
                 {user.walletAddress && (
                   <div style={{ padding: '20px', backgroundColor: '#F0FDF4', borderRadius: '12px', border: '1px solid #BBF7D0' }}>
                     <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Your Wallet</h3>
@@ -248,7 +224,6 @@ const SettingsPage = () => {
                   </div>
                 )}
 
-                {/* Contract Address */}
                 <div style={{ padding: '20px', backgroundColor: '#FEF3C7', borderRadius: '12px', border: '1px solid #FDE68A' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Smart Contract</h3>
                   
@@ -268,25 +243,19 @@ const SettingsPage = () => {
                       0x0fDab3007a2aC7A7d8eC2682699e7c3eDD042B07
                     </p>
                   </div>
-
-                  <p style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic' }}>              
-                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Security Tab */}
           {activeTab === 'security' && user && (
             <div style={{ maxWidth: '700px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text)', marginBottom: '24px' }}>Security & Encryption</h2>
               
-              {/* Encryption Keys (Hospitals only) */}
               {user.role === 'hospital' && (
                 <div style={{ marginBottom: '32px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Encryption Keys (RSA)</h3>
                   
-                  {/* Public Key */}
                   <div style={{ 
                     padding: '20px', 
                     backgroundColor: '#F0FDF4', 
@@ -323,7 +292,6 @@ const SettingsPage = () => {
                     </p>
                   </div>
 
-                  {/* Private Key */}
                   <div style={{ 
                     padding: '20px', 
                     backgroundColor: '#FEF2F2', 
@@ -376,84 +344,54 @@ const SettingsPage = () => {
                 </div>
               )}
 
-              {/* Change Password Section */}
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Change Password</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Password Management</h3>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Current Password</label>
-                    <input
-                      type="password"
-                      placeholder="Enter current password"
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        outline: 'none'
-                      }}
-                    />
-                  </div>
+                <div style={{ 
+                  padding: '20px', 
+                  backgroundColor: '#F9FAFB', 
+                  borderRadius: '12px', 
+                  border: '1px solid #E5E7EB'
+                }}>
+                  <p style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '16px' }}>
+                    Update your password to keep your account secure.
+                  </p>
                   
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>New Password</label>
-                    <input
-                      type="password"
-                      placeholder="Enter new password"
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        outline: 'none'
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Confirm New Password</label>
-                    <input
-                      type="password"
-                      placeholder="Confirm new password"
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        outline: 'none'
-                      }}
-                    />
-                  </div>
-
                   <button
+                    onClick={() => setShowPasswordModal(true)}
                     style={{
-                      padding: '10px 24px',
-                      backgroundColor: 'var(--primary)',
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
                       fontSize: '14px',
-                      fontWeight: '500',
+                      fontWeight: '600',
                       cursor: 'pointer',
-                      alignSelf: 'flex-start'
+                      boxShadow: '0 4px 6px rgba(102, 126, 234, 0.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 12px rgba(102, 126, 234, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(102, 126, 234, 0.3)';
                     }}
                   >
-                    Update Password
+                    Change Password
                   </button>
-
-                  <p style={{ fontSize: '13px', color: 'var(--muted)', fontStyle: 'italic' }}>
-                    Password change functionality coming soon...
-                  </p>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {showPasswordModal && (
+        <ChangePassword onClose={() => setShowPasswordModal(false)} />
+      )}
     </div>
   );
 };
