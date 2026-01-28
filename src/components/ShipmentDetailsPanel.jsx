@@ -5,7 +5,6 @@ import BlockchainInfo from './BlockchainInfo';
 import { hybridDecrypt } from '../utils/hybridEncryption';
 import { API_URL } from '../config';
 
-
 const ShipmentDetailsPanel = ({ shipment }) => {
   const [telemetry, setTelemetry] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,7 +13,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
   const [decryptError, setDecryptError] = useState(null);
   const [user, setUser] = useState(null);
 
-
   // Get user from localStorage
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -22,7 +20,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
       setUser(JSON.parse(stored));
     }
   }, []);
-
 
   // Fetch telemetry data when shipment changes
   useEffect(() => {
@@ -34,11 +31,10 @@ const ShipmentDetailsPanel = ({ shipment }) => {
     }
   }, [shipment]);
 
-
   const fetchTelemetry = async (shipmentId) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/shipments/${shipmentId}/telemetry`);
+      const res = await fetch(`${API_URL}/api/telemetry/${shipmentId}`);
       const data = await res.json();
       setTelemetry(data);
     } catch (err) {
@@ -48,18 +44,15 @@ const ShipmentDetailsPanel = ({ shipment }) => {
     }
   };
 
-
-  // Decrypt shipment details using hybrid encryption
+  // Decrypt shipment details using blockchain key
   const handleDecrypt = async () => {
-    if (!shipment?.encryptedDetails || !shipment?.encryptedKey) {
-      setDecryptError('No encrypted details or encryption key available for this shipment.');
+    if (!shipment?.encryptedDetails) {
+      setDecryptError('No encrypted details available for this shipment.');
       return;
     }
 
-
     setDecrypting(true);
     setDecryptError(null);
-
 
     try {
       // Get private key from localStorage
@@ -71,19 +64,57 @@ const ShipmentDetailsPanel = ({ shipment }) => {
         return;
       }
 
+      console.log('🔐 Fetching encrypted key from blockchain...');
+      console.log('Shipment ID:', shipment.shipmentId);
+      
+      // Get user token
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        throw new Error('User not logged in');
+      }
+      const { token } = JSON.parse(userData);
+      
+      // Construct URL using config
+      const fullUrl = `${API_URL}/api/shipments/${shipment.shipmentId}/encryption-key`;
+      console.log('Fetching from URL:', fullUrl);
+      
+      // Fetch encrypted key from blockchain via backend
+      const keyResponse = await fetch(fullUrl, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Response status:', keyResponse.status);
+
+      if (!keyResponse.ok) {
+        const errorText = await keyResponse.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to fetch encryption key: ${keyResponse.status}`);
+      }
+
+      const responseData = await keyResponse.json();
+      const { encryptedKey } = responseData;
+      
+      console.log('✅ Got encrypted key from blockchain!');
+      console.log('Encrypted key length:', encryptedKey?.length);
+
+      if (!encryptedKey) {
+        throw new Error('No encryption key returned from blockchain');
+      }
 
       console.log('🔓 Starting hybrid decryption...');
       console.log('   Encrypted data length:', shipment.encryptedDetails.length);
-      console.log('   Encrypted key length:', shipment.encryptedKey.length);
+      console.log('   Encrypted key length:', encryptedKey.length);
 
-
-      // Use the hybridDecrypt function from your utility
+      // Decrypt using hybrid decryption
       const decryptedString = hybridDecrypt(
-        shipment.encryptedDetails,  // AES-encrypted data (base64)
-        shipment.encryptedKey,       // RSA-encrypted AES key (base64)
-        privateKey                   // Hospital's RSA private key (PEM)
+        shipment.encryptedDetails,  // From MongoDB
+        encryptedKey,               // From Blockchain
+        privateKey                  // From localStorage
       );
-
 
       console.log('✅ Decryption successful!');
       
@@ -91,25 +122,21 @@ const ShipmentDetailsPanel = ({ shipment }) => {
       const decrypted = JSON.parse(decryptedString);
       setDecryptedData(decrypted);
 
-
     } catch (error) {
       console.error('❌ Decryption error:', error);
-      setDecryptError('Failed to decrypt. This shipment may not be intended for you, or your private key is incorrect.');
+      setDecryptError(`Failed to decrypt: ${error.message}`);
     } finally {
       setDecrypting(false);
     }
   };
-
 
   const handleHideDetails = () => {
     setDecryptedData(null);
     setDecryptError(null);
   };
 
-
   const isHospital = user?.role === 'hospital';
-  const hasEncryptedDetails = shipment?.encryptedDetails && shipment?.encryptedKey;
-
+  const hasEncryptedDetails = shipment?.encryptedDetails;
 
   if (!shipment) {
     return (
@@ -126,7 +153,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
       </div>
     );
   }
-
 
   return (
     <div style={{
@@ -146,7 +172,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
           </div>
         </div>
 
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '14px', color: 'var(--muted)' }}>Shipment ID:</span>
           <span style={{ fontWeight: '500', color: 'var(--primary)' }}>{shipment.shipmentId}</span>
@@ -163,12 +188,10 @@ const ShipmentDetailsPanel = ({ shipment }) => {
         </div>
       </div>
 
-
       {/* Content */}
       <div style={{ flex: 1, overflow: 'auto' }}>
 
-
-        {/* DECRYPTION PANEL - HYBRID ENCRYPTION */}
+        {/* DECRYPTION PANEL - BLOCKCHAIN INTEGRATION */}
         {isHospital && hasEncryptedDetails && (
           <div style={{ 
             padding: '24px', 
@@ -187,7 +210,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
               {decryptedData ? (
                 <>
                   <LockOpenIcon style={{ width: '16px', height: '16px', color: '#10B981' }} />
-                  Secure Details (Decrypted)
+                  Secure Details (Decrypted via Blockchain)
                 </>
               ) : (
                 <>
@@ -197,7 +220,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
               )}
             </h3>
 
-
             {!decryptedData ? (
               <div>
                 <p style={{ 
@@ -206,7 +228,7 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                   marginBottom: '12px',
                   lineHeight: '1.5'
                 }}>
-                  This shipment contains encrypted sensitive information. Click below to decrypt using your private key.
+                  This shipment contains encrypted sensitive information. The encryption key is stored on the blockchain for immutability and security.
                 </p>
                 
                 <button
@@ -229,9 +251,8 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                   }}
                 >
                   <EyeIcon style={{ width: '16px', height: '16px' }} />
-                  {decrypting ? 'Decrypting...' : 'View Secure Details'}
+                  {decrypting ? 'Decrypting from Blockchain...' : 'View Secure Details'}
                 </button>
-
 
                 {decryptError && (
                   <div style={{
@@ -262,14 +283,12 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                     </p>
                   </div>
 
-
                   <div style={{ marginBottom: '12px' }}>
                     <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>Batch Number</p>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
                       {decryptedData.batchNumber || 'N/A'}
                     </p>
                   </div>
-
 
                   {decryptedData.quantity && (
                     <div style={{ marginBottom: '12px' }}>
@@ -279,7 +298,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                       </p>
                     </div>
                   )}
-
 
                   {decryptedData.internalNote && (
                     <div>
@@ -291,6 +309,16 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                   )}
                 </div>
 
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#E6F8FC',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  color: '#0e7490',
+                  marginBottom: '12px'
+                }}>
+                  🔗 Decrypted using encryption key retrieved from Polygon Amoy blockchain
+                </div>
 
                 <button
                   onClick={handleHideDetails}
@@ -318,7 +346,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
           </div>
         )}
 
-
         {/* Temperature Chart */}
         {telemetry.length > 0 && (
           <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
@@ -326,15 +353,12 @@ const ShipmentDetailsPanel = ({ shipment }) => {
           </div>
         )}
 
-
         {/* Blockchain Verification */}
         <BlockchainInfo shipmentId={shipment.shipmentId} />
-
 
         {/* Shipment Details */}
         <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '16px' }}>Shipment Information</h3>
-
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '14px' }}>
             <div>
@@ -359,24 +383,18 @@ const ShipmentDetailsPanel = ({ shipment }) => {
             </div>
           </div>
 
-
           <div style={{ marginTop: '16px' }}>
             <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '4px' }}>Temperature</p>
             <p style={{ fontWeight: '500', color: 'var(--text)', margin: 0 }}>
               {shipment.temperature ? `${shipment.temperature}°C` : 'N/A'}
             </p>
           </div>
-
-
-          {/* ❌ REMOVED: Humidity display */}
         </div>
-
 
         {/* Telemetry Table */}
         {telemetry.length > 0 && (
           <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '16px' }}>Recent Telemetry Data</h3>
-
 
             <div style={{ maxHeight: '200px', overflow: 'auto' }}>
               <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
@@ -384,7 +402,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                   <tr style={{ backgroundColor: 'var(--muted-bg)', textAlign: 'left' }}>
                     <th style={{ padding: '8px', color: 'var(--muted)' }}>Time</th>
                     <th style={{ padding: '8px', color: 'var(--muted)' }}>Temp (°C)</th>
-                    {/* ❌ REMOVED: Humidity column */}
                   </tr>
                 </thead>
                 <tbody>
@@ -400,7 +417,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
                       }}>
                         {reading.temperature}°C
                       </td>
-                      {/* ❌ REMOVED: Humidity cell */}
                     </tr>
                   ))}
                 </tbody>
@@ -408,7 +424,6 @@ const ShipmentDetailsPanel = ({ shipment }) => {
             </div>
           </div>
         )}
-
 
         {/* Loading State */}
         {loading && (
@@ -420,6 +435,5 @@ const ShipmentDetailsPanel = ({ shipment }) => {
     </div>
   );
 };
-
 
 export default ShipmentDetailsPanel;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { getCustomers } from '../services/api';
-import LoadingSpinner from '../components/LoadingSpinner'; // ✅ ADD THIS
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
@@ -31,7 +31,6 @@ const CustomersPage = () => {
     customer.organization?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // ✅ FIXED: Use LoadingSpinner component
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -147,20 +146,35 @@ const CustomersPage = () => {
                   >
                     <td style={{ padding: '16px 24px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ 
-                          width: '36px', 
-                          height: '36px', 
-                          borderRadius: '50%', 
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          color: 'white', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          fontWeight: '600',
-                          fontSize: '14px'
-                        }}>
-                          {customer.name?.charAt(0).toUpperCase() || '?'}
-                        </div>
+                        {/* ✅ UPDATED: Show photo if exists, otherwise show initial */}
+                        {customer.profilePhoto ? (
+                          <img
+                            src={customer.profilePhoto}
+                            alt={customer.name}
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '2px solid #e5e7eb'
+                            }}
+                          />
+                        ) : (
+                          <div style={{ 
+                            width: '36px', 
+                            height: '36px', 
+                            borderRadius: '50%', 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            fontWeight: '600',
+                            fontSize: '14px'
+                          }}>
+                            {customer.name?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                        )}
                         <span style={{ fontWeight: '500', color: 'var(--text)' }}>{customer.name || 'Unknown'}</span>
                       </div>
                     </td>

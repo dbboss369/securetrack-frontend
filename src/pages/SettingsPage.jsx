@@ -6,6 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 import ChangePassword from '../components/ChangePassword';
 import ProfilePhoto from '../components/ProfilePhoto';
+import { API_URL } from '../config';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -31,11 +32,59 @@ const SettingsPage = () => {
     }
   }, []);
 
-  const tabs = [
-    { id: 'profile', name: 'Profile', icon: UserIcon },
-    { id: 'blockchain', name: 'Blockchain', icon: LinkIcon },
-    { id: 'security', name: 'Security', icon: ShieldCheckIcon }
-  ];
+  // ✅ FIXED: Fetch fresh user data from database (including profile photo)
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // ✅ Get token from user object
+        const userData = JSON.parse(localStorage.getItem('user'));
+        const token = userData?.token;
+        
+        if (!token) {
+          console.log('⚠️ No token found in localStorage');
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/api/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📸 Fresh user data from DB:', data.user);
+          
+          // ✅ Update localStorage with fresh data including profilePhoto
+          if (data.user) {
+            const updatedUser = {
+              ...userData, // Keep existing data (including token!)
+              name: data.user.name,
+              email: data.user.email,
+              role: data.user.role,
+              organization: data.user.organization,
+              profilePhoto: data.user.profilePhoto || null
+            };
+            
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            
+            // Trigger ProfilePhoto component to reload
+            if (data.user.profilePhoto) {
+              console.log('✅ Profile photo loaded from database!');
+              window.dispatchEvent(new Event('storage')); // Notify other components
+            }
+          }
+        } else {
+          console.error('❌ Failed to fetch user data:', response.status);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []); // Run once when component mounts
 
   const handleDownloadKey = () => {
     const privateKey = localStorage.getItem('hospitalPrivateKey');
@@ -49,6 +98,44 @@ const SettingsPage = () => {
       window.URL.revokeObjectURL(url);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        alert('User not found');
+        return;
+      }
+
+      const userData = JSON.parse(userStr);
+      const response = await fetch(`${API_URL}/api/auth/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${userData.token}`
+        }
+      });
+
+      if (response.ok) {
+        alert('✅ Account deleted successfully. You will be logged out now.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('hospitalPrivateKey');
+        localStorage.removeItem('profilePhoto');
+        window.location.href = '/login';
+      } else {
+        const data = await response.json();
+        alert('❌ Failed to delete account: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('❌ Network error. Please try again.');
+    }
+  };
+
+  const tabs = [
+    { id: 'profile', name: 'Profile', icon: UserIcon },
+    { id: 'blockchain', name: 'Blockchain', icon: LinkIcon },
+    { id: 'security', name: 'Security', icon: ShieldCheckIcon }
+  ];
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)' }}>
@@ -344,7 +431,7 @@ const SettingsPage = () => {
                 </div>
               )}
 
-              <div>
+              <div style={{ marginBottom: '32px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Password Management</h3>
                 
                 <div style={{ 
@@ -382,6 +469,70 @@ const SettingsPage = () => {
                   >
                     Change Password
                   </button>
+                </div>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '16px' }}>Danger Zone</h3>
+                
+                <div style={{ 
+                  padding: '20px', 
+                  backgroundColor: '#fef2f2', 
+                  borderRadius: '12px', 
+                  border: '2px solid #fca5a5'
+                }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>
+                    Delete Account
+                  </h4>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px' }}>
+                    Once you delete your account, there is no going back. All your data will be permanently removed.
+                  </p>
+                  
+                  <button
+                    onClick={() => {
+                      if (window.confirm('⚠️ WARNING: Are you ABSOLUTELY SURE you want to delete your account?\n\nThis action CANNOT be undone!\n\nAll your data will be permanently deleted.')) {
+                        if (window.confirm('Final confirmation: Type your email mentally and click OK to proceed with account deletion.')) {
+                          handleDeleteAccount();
+                        }
+                      }
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      background: '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 6px rgba(220, 38, 38, 0.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#b91c1c';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 12px rgba(220, 38, 38, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#dc2626';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(220, 38, 38, 0.3)';
+                    }}
+                  >
+                    Delete My Account
+                  </button>
+                  
+                  <div style={{ 
+                    marginTop: '12px',
+                    padding: '12px',
+                    backgroundColor: '#fff7ed',
+                    borderRadius: '6px',
+                    border: '1px solid #fed7aa'
+                  }}>
+                    <p style={{ fontSize: '12px', color: '#c2410c', fontWeight: '500', margin: 0 }}>
+                      ⚠️ This will permanently delete your account and all associated data!
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

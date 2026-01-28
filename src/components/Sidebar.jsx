@@ -16,12 +16,37 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState(null);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
-      setUser(JSON.parse(userStr));
+      const userData = JSON.parse(userStr);
+      setUser(userData);
+      setProfilePhoto(userData.profilePhoto || null);
     }
+  }, []);
+
+  // Listen for profile photo changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        setProfilePhoto(userData.profilePhoto || null);
+      }
+    };
+
+    // Listen to storage events (across tabs)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listen to custom event (same tab)
+    window.addEventListener('profilePhotoUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profilePhotoUpdated', handleStorageChange);
+    };
   }, []);
 
   const baseMenuItems = [
@@ -43,10 +68,23 @@ const Sidebar = () => {
     : [...baseMenuItems, settingsMenuItem];
 
   const handleLogout = () => {
+    // Save private keys before clearing localStorage
+    const hospitalPrivateKey = localStorage.getItem('hospitalPrivateKey');
+    const manufacturerPrivateKey = localStorage.getItem('manufacturerPrivateKey');
+    
+    // Remove only session-specific data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('hospitalPrivateKey');
-    localStorage.removeItem('profilePhoto');
+    
+    // Restore private keys (they should persist across sessions like a device keychain)
+    if (hospitalPrivateKey) {
+      localStorage.setItem('hospitalPrivateKey', hospitalPrivateKey);
+    }
+    if (manufacturerPrivateKey) {
+      localStorage.setItem('manufacturerPrivateKey', manufacturerPrivateKey);
+    }
+    
+    console.log('✅ Logged out - Private keys preserved');
     navigate('/login');
   };
 
@@ -201,11 +239,22 @@ const Sidebar = () => {
             fontWeight: '600',
             color: 'white',
             flexShrink: 0,
-            backgroundImage: localStorage.getItem('profilePhoto') ? `url(${localStorage.getItem('profilePhoto')})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            overflow: 'hidden',
+            border: '2px solid var(--primary-500)'
           }}>
-            {!localStorage.getItem('profilePhoto') && (user?.name?.charAt(0).toUpperCase() || 'U')}
+            {profilePhoto ? (
+              <img 
+                src={profilePhoto} 
+                alt="Profile" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'cover' 
+                }} 
+              />
+            ) : (
+              <span>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
+            )}
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{ 

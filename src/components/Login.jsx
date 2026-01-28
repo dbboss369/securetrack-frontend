@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_URL } from '../config';
 
-
-
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,18 +9,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-
-
     console.log('🔐 Login attempt:', email);
-
-
 
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -31,39 +23,44 @@ const Login = () => {
         body: JSON.stringify({ email, password })
       });
 
-
-
       const data = await res.json();
       console.log('📦 Backend Response:', data);
-
-
 
       if (!res.ok) {
         throw new Error(data.error || 'Login failed');
       }
 
-
-
-      // ✅ Get private key from localStorage (stored during signup)
-      const privateKey = localStorage.getItem('hospitalPrivateKey');
-      console.log('🔑 Private key found in localStorage:', !!privateKey);
-
-
-
-      // ✅ Store user WITH token AND privateKey from localStorage
+      // ✅ FIXED: Save user with token
       const userWithToken = {
         ...data.user,
-        token: data.token,
-        privateKey: privateKey  // Get from localStorage, not backend!
+        token: data.token
       };
 
-
-
       localStorage.setItem('user', JSON.stringify(userWithToken));
-      console.log('✅ User saved with private key:', !!userWithToken.privateKey);
+      
+      // ✅ CRITICAL: Store hospital encryption keys if user is hospital
+      if (data.user.role === 'hospital') {
+        if (data.user.privateKey) {
+          localStorage.setItem('hospitalPrivateKey', data.user.privateKey);
+          console.log('🔑 Hospital private key stored from backend!');
+        } else {
+          console.warn('⚠️ No private key in backend response for hospital user!');
+        }
+
+        if (data.user.publicKey) {
+          localStorage.setItem('hospitalPublicKey', data.user.publicKey);
+          console.log('🔓 Hospital public key stored from backend!');
+        }
+      }
+      
+      console.log('✅ User saved:', {
+        hasToken: !!userWithToken.token,
+        role: userWithToken.role,
+        hasPrivateKey: !!data.user.privateKey,
+        hasProfilePhoto: !!userWithToken.profilePhoto
+      });
+      
       console.log('✅ Navigating to dashboard...');
-
-
 
       navigate('/dashboard');
     } catch (err) {
@@ -73,8 +70,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-
-
 
   return (
     <div style={{
@@ -116,8 +111,6 @@ const Login = () => {
           </p>
         </div>
 
-
-
         {error && (
           <div style={{
             padding: '12px',
@@ -131,8 +124,6 @@ const Login = () => {
             ❌ {error}
           </div>
         )}
-
-
 
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '16px' }}>
@@ -156,8 +147,6 @@ const Login = () => {
             />
           </div>
 
-
-
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#333' }}>
               Password
@@ -179,8 +168,6 @@ const Login = () => {
             />
           </div>
 
-
-
           <button
             type="submit"
             disabled={loading}
@@ -200,8 +187,6 @@ const Login = () => {
           </button>
         </form>
 
-
-
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#666' }}>
           Don't have an account?{' '}
           <Link to="/signup" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>
@@ -212,7 +197,5 @@ const Login = () => {
     </div>
   );
 };
-
-
 
 export default Login;

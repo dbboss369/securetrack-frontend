@@ -4,7 +4,6 @@ import { generateKeyPair } from '../utils/encryption';
 import { ethers } from 'ethers';
 import { API_URL } from '../config';
 
-
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -17,47 +16,42 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-
     console.log('📝 Signup attempt:', formData.email);
-
 
     try {
       let publicKeyPem = null;
       let walletAddress = null;
       let privateKeyPem = null;
 
-
       if (formData.role === 'hospital') {
         const keypair = generateKeyPair();
         publicKeyPem = keypair.publicKey;
         privateKeyPem = keypair.privateKey;
 
+        console.log('🔑 Keys generated!');
+        console.log('   Public key length:', publicKeyPem?.length);
+        console.log('   Private key length:', privateKeyPem?.length);
 
         if (!window.ethereum) {
           throw new Error('MetaMask is required for hospital registration');
         }
-
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send('eth_requestAccounts', []);
         const signer = await provider.getSigner();
         walletAddress = await signer.getAddress();
 
-
         console.log('🏥 Hospital wallet:', walletAddress);
       }
-
 
       const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
@@ -65,34 +59,39 @@ const Signup = () => {
         body: JSON.stringify({
           ...formData,
           publicKey: publicKeyPem,
+          privateKey: privateKeyPem,  // ✅ FIXED: Send to backend!
           walletAddress: walletAddress,
         }),
       });
 
-
       const data = await res.json();
-      console.log('Response:', data);
-
+      console.log('📦 Backend Response:', data);
 
       if (!res.ok) {
         throw new Error(data.error || 'Signup failed');
       }
 
-
+      // ✅ Store private key in localStorage (backup)
       if (formData.role === 'hospital' && privateKeyPem) {
         localStorage.setItem('hospitalPrivateKey', privateKeyPem);
+        console.log('🔑 Private key stored in localStorage');
       }
 
-
+      // ✅ Store complete user object with token
       const userWithToken = {
         ...data.user,
         token: data.token,
       };
 
-
       localStorage.setItem('user', JSON.stringify(userWithToken));
-      console.log('✅ User stored, navigating to dashboard...');
-
+      
+      console.log('✅ User saved:', {
+        hasToken: !!userWithToken.token,
+        hasPrivateKey: !!userWithToken.privateKey,
+        role: userWithToken.role
+      });
+      
+      console.log('✅ Navigating to dashboard...');
 
       navigate('/dashboard');
     } catch (err) {
@@ -102,7 +101,6 @@ const Signup = () => {
       setLoading(false);
     }
   };
-
 
   return (
     <div
@@ -164,7 +162,6 @@ const Signup = () => {
           </p>
         </div>
 
-
         {error && (
           <div
             style={{
@@ -180,7 +177,6 @@ const Signup = () => {
             ❌ {error}
           </div>
         )}
-
 
         <form onSubmit={handleSignup}>
           <div style={{ marginBottom: '16px' }}>
@@ -213,7 +209,6 @@ const Signup = () => {
             />
           </div>
 
-
           <div style={{ marginBottom: '16px' }}>
             <label
               style={{
@@ -244,7 +239,6 @@ const Signup = () => {
             />
           </div>
 
-
           <div style={{ marginBottom: '16px' }}>
             <label
               style={{
@@ -274,7 +268,6 @@ const Signup = () => {
               }}
             />
           </div>
-
 
           <div style={{ marginBottom: '16px' }}>
             <label
@@ -308,7 +301,6 @@ const Signup = () => {
               <option value="admin">Admin</option>
             </select>
 
-
             {formData.role === 'hospital' && (
               <p
                 style={{
@@ -317,11 +309,10 @@ const Signup = () => {
                   marginTop: '6px',
                 }}
               >
-                MetaMask will be used to link your wallet; your public key is stored securely with your account.
+                ✅ MetaMask will be used to link your wallet. Your encryption keys will be securely stored.
               </p>
             )}
           </div>
-
 
           <div style={{ marginBottom: '24px' }}>
             <label
@@ -354,7 +345,6 @@ const Signup = () => {
             />
           </div>
 
-
           <button
             type="submit"
             disabled={loading}
@@ -373,7 +363,6 @@ const Signup = () => {
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
-
 
         <p
           style={{
@@ -399,6 +388,5 @@ const Signup = () => {
     </div>
   );
 };
-
 
 export default Signup;
