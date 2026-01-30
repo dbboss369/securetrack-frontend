@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserIcon, 
   ShieldCheckIcon,
-  LinkIcon
+  LinkIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import ChangePassword from '../components/ChangePassword';
 import ProfilePhoto from '../components/ProfilePhoto';
@@ -32,11 +34,9 @@ const SettingsPage = () => {
     }
   }, []);
 
-  // ✅ FIXED: Fetch fresh user data from database (including profile photo)
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // ✅ Get token from user object
         const userData = JSON.parse(localStorage.getItem('user'));
         const token = userData?.token;
         
@@ -55,10 +55,9 @@ const SettingsPage = () => {
           const data = await response.json();
           console.log('📸 Fresh user data from DB:', data.user);
           
-          // ✅ Update localStorage with fresh data including profilePhoto
           if (data.user) {
             const updatedUser = {
-              ...userData, // Keep existing data (including token!)
+              ...userData,
               name: data.user.name,
               email: data.user.email,
               role: data.user.role,
@@ -69,10 +68,9 @@ const SettingsPage = () => {
             localStorage.setItem('user', JSON.stringify(updatedUser));
             setUser(updatedUser);
             
-            // Trigger ProfilePhoto component to reload
             if (data.user.profilePhoto) {
               console.log('✅ Profile photo loaded from database!');
-              window.dispatchEvent(new Event('storage')); // Notify other components
+              window.dispatchEvent(new Event('storage'));
             }
           }
         } else {
@@ -84,7 +82,7 @@ const SettingsPage = () => {
     };
 
     fetchUserData();
-  }, []); // Run once when component mounts
+  }, []);
 
   const handleDownloadKey = () => {
     const privateKey = localStorage.getItem('hospitalPrivateKey');
@@ -138,357 +136,253 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)' }}>
+    <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
       
-      <div style={{ backgroundColor: 'var(--card)', padding: '24px', borderBottom: '1px solid var(--border)' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>Settings</h1>
-        <p style={{ color: 'var(--muted)', margin: '4px 0 0 0', fontSize: '14px' }}>Manage your account settings and preferences</p>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 p-6">
+        <div className="flex items-center gap-3">
+          <Cog6ToothIcon style={{ color: '#11B0CD' }} className="w-7 h-7" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+            <p className="text-gray-600 text-sm mt-1">Manage your account settings and preferences</p>
+          </div>
+        </div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div className="flex-1 flex overflow-hidden">
         
-        <div style={{ width: '280px', backgroundColor: 'var(--card)', borderRight: '1px solid var(--border)', padding: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {/* Sidebar */}
+        <div className="w-72 bg-white border-r border-gray-200 p-6">
+          <div className="flex flex-col gap-2">
             {tabs.map((tab) => (
-              <button
+              <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 16px',
-                  backgroundColor: activeTab === tab.id ? '#E6F8FC' : 'transparent',
-                  color: activeTab === tab.id ? 'var(--primary)' : 'var(--muted)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: activeTab === tab.id ? '600' : '500',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.15s ease'
+                  backgroundColor: activeTab === tab.id ? 'rgba(17, 176, 205, 0.1)' : 'transparent',
+                  color: activeTab === tab.id ? '#11B0CD' : '#6B7280',
+                  fontWeight: activeTab === tab.id ? '600' : '500'
                 }}
               >
-                <tab.icon style={{ width: '20px', height: '20px' }} />
+                <tab.icon className="w-5 h-5" />
                 {tab.name}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
-          
-          {activeTab === 'profile' && user && (
-            <div style={{ maxWidth: '600px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text)', marginBottom: '24px' }}>Profile Information</h2>
-              
-              <div style={{ marginBottom: '32px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '16px' }}>Profile Picture</label>
-                <ProfilePhoto />
-              </div>
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto p-8 bg-white">
+          <AnimatePresence mode="wait">
+            {/* Profile Tab */}
+            {activeTab === 'profile' && user && (
+              <div key="profile" className="max-w-2xl">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Profile Information</h2>
+                
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-4">Profile Picture</label>
+                  <ProfilePhoto />
+                </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Full Name</label>
-                  <input
-                    type="text"
-                    value={user.name || ''}
-                    readOnly
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      outline: 'none',
-                      backgroundColor: 'var(--bg)'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Email Address</label>
-                  <input
-                    type="email"
-                    value={user.email || ''}
-                    readOnly
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      outline: 'none',
-                      backgroundColor: 'var(--bg)'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Role</label>
-                  <input
-                    type="text"
-                    value={user.role?.toUpperCase() || 'USER'}
-                    readOnly
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      outline: 'none',
-                      backgroundColor: 'var(--bg)'
-                    }}
-                  />
-                </div>
-                {user.organization && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
                   <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '8px' }}>Organization</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
                     <input
                       type="text"
-                      value={user.organization}
+                      value={user.name || ''}
                       readOnly
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        outline: 'none',
-                        backgroundColor: 'var(--bg)'
-                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm bg-gray-50 text-gray-700"
                     />
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'blockchain' && user && (
-            <div style={{ maxWidth: '700px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text)', marginBottom: '24px' }}>Blockchain Configuration</h2>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ padding: '20px', backgroundColor: '#F0F9FF', borderRadius: '12px', border: '1px solid #BFDBFE' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Network Information</h3>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', fontSize: '14px' }}>
-                    <div style={{ color: 'var(--muted)' }}>Network:</div>
-                    <div style={{ fontWeight: '500', color: 'var(--text)' }}>Polygon Amoy Testnet</div>
-                    
-                    <div style={{ color: 'var(--muted)' }}>Chain ID:</div>
-                    <div style={{ fontWeight: '500', color: 'var(--text)' }}>80002</div>
-                    
-                    <div style={{ color: 'var(--muted)' }}>RPC URL:</div>
-                    <div style={{ fontWeight: '400', color: 'var(--text)', fontSize: '12px', wordBreak: 'break-all' }}>
-                      https://rpc-amoy.polygon.technology
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      value={user.email || ''}
+                      readOnly
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm bg-gray-50 text-gray-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+                    <input
+                      type="text"
+                      value={user.role?.toUpperCase() || 'USER'}
+                      readOnly
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm bg-gray-50 text-gray-700"
+                    />
+                  </div>
+                  {user.organization && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Organization</label>
+                      <input
+                        type="text"
+                        value={user.organization}
+                        readOnly
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm bg-gray-50 text-gray-700"
+                      />
                     </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Blockchain Tab */}
+            {activeTab === 'blockchain' && user && (
+              <div key="blockchain" className="max-w-3xl space-y-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Blockchain Configuration</h2>
+                
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200 shadow-sm">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Network Information</h3>
+                  
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600 mb-1">Network:</p>
+                      <p className="font-semibold text-gray-900">Polygon Amoy</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 mb-1">Chain ID:</p>
+                      <p className="font-semibold text-gray-900">80002</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 mb-1">Status:</p>
+                      <p className="font-semibold text-green-600">✅ Connected</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <p className="text-xs text-gray-600 mb-2">RPC URL:</p>
+                    <p className="text-xs font-mono bg-white px-3 py-2 rounded-lg border border-blue-200 text-gray-700 break-all">
+                      https://rpc-amoy.polygon.technology
+                    </p>
                   </div>
                 </div>
 
                 {user.walletAddress && (
-                  <div style={{ padding: '20px', backgroundColor: '#F0FDF4', borderRadius: '12px', border: '1px solid #BBF7D0' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Your Wallet</h3>
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Your Wallet</h3>
                     
-                    <div style={{ marginBottom: '12px' }}>
-                      <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '6px' }}>Wallet Address</p>
-                      <p style={{ 
-                        fontSize: '13px', 
-                        fontFamily: 'monospace', 
-                        color: 'var(--text)', 
-                        backgroundColor: '#FFFFFF',
-                        padding: '10px',
-                        borderRadius: '6px',
-                        border: '1px solid #D1FAE5',
-                        wordBreak: 'break-all',
-                        margin: 0
-                      }}>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">Wallet Address</p>
+                      <p className="text-xs font-mono bg-white px-3 py-2 rounded-lg border border-green-200 text-gray-700 break-all">
                         {user.walletAddress}
                       </p>
                     </div>
 
-                    <p style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic' }}>
+                    <p className="text-xs text-green-700 font-medium mt-3">
                       ✅ Connected to Polygon Amoy Testnet
                     </p>
                   </div>
                 )}
 
-                <div style={{ padding: '20px', backgroundColor: '#FEF3C7', borderRadius: '12px', border: '1px solid #FDE68A' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Smart Contract</h3>
+                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-6 border border-yellow-200 shadow-sm">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Smart Contract</h3>
                   
-                  <div style={{ marginBottom: '12px' }}>
-                    <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '6px' }}>Contract Address</p>
-                    <p style={{ 
-                      fontSize: '13px', 
-                      fontFamily: 'monospace', 
-                      color: 'var(--text)', 
-                      backgroundColor: '#FFFFFF',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '1px solid #FDE68A',
-                      wordBreak: 'break-all',
-                      margin: 0
-                    }}>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-2">Contract Address</p>
+                    <p className="text-xs font-mono bg-white px-3 py-2 rounded-lg border border-yellow-200 text-gray-700 break-all">
                       0x0fDab3007a2aC7A7d8eC2682699e7c3eDD042B07
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'security' && user && (
-            <div style={{ maxWidth: '700px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text)', marginBottom: '24px' }}>Security & Encryption</h2>
-              
-              {user.role === 'hospital' && (
-                <div style={{ marginBottom: '32px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Encryption Keys (RSA)</h3>
-                  
-                  <div style={{ 
-                    padding: '20px', 
-                    backgroundColor: '#F0FDF4', 
-                    borderRadius: '12px', 
-                    border: '1px solid #BBF7D0',
-                    marginBottom: '16px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                      <ShieldCheckIcon style={{ width: '20px', height: '20px', color: '#10B981' }} />
-                      <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>Public Key</h4>
-                    </div>
+            {/* Security Tab */}
+            {activeTab === 'security' && user && (
+              <div key="security" className="max-w-3xl space-y-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Security & Encryption</h2>
+                
+                {user.role === 'hospital' && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Encryption Keys (RSA)</h3>
                     
-                    <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '12px' }}>
-                      Used by manufacturers to encrypt shipment data for you.
-                    </p>
-                    
-                    <div style={{ 
-                      backgroundColor: '#FFFFFF',
-                      padding: '12px',
-                      borderRadius: '6px',
-                      border: '1px solid #D1FAE5',
-                      fontSize: '11px',
-                      fontFamily: 'monospace',
-                      color: 'var(--text)',
-                      maxHeight: '100px',
-                      overflow: 'auto',
-                      wordBreak: 'break-all'
-                    }}>
-                      {publicKey ? publicKey.substring(0, 100) + '...' : 'No public key found'}
-                    </div>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ShieldCheckIcon className="w-5 h-5 text-green-600" />
+                        <h4 className="text-sm font-bold text-gray-900">Public Key</h4>
+                      </div>
+                      
+                      <p className="text-xs text-gray-600 mb-3">
+                        Used by manufacturers to encrypt shipment data for you.
+                      </p>
+                      
+                      <div className="bg-white p-3 rounded-lg border border-green-200 text-xs font-mono text-gray-700 max-h-24 overflow-auto break-all">
+                        {publicKey ? publicKey.substring(0, 100) + '...' : 'No public key found'}
+                      </div>
 
-                    <p style={{ fontSize: '12px', color: '#10B981', marginTop: '8px', fontWeight: '500' }}>
-                      ✅ Status: Active
-                    </p>
-                  </div>
-
-                  <div style={{ 
-                    padding: '20px', 
-                    backgroundColor: '#FEF2F2', 
-                    borderRadius: '12px', 
-                    border: '1px solid #FECACA'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                      <ShieldCheckIcon style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-                      <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>Private Key</h4>
-                    </div>
-                    
-                    <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '12px' }}>
-                      Stored securely in your browser. Used to decrypt shipment details.
-                    </p>
-
-                    <p style={{ fontSize: '12px', color: hasPrivateKey ? '#10B981' : '#EF4444', fontWeight: '500', marginBottom: '12px' }}>
-                      {hasPrivateKey ? '✅ Private key stored in browser' : '❌ Private key not found'}
-                    </p>
-
-                    {hasPrivateKey && (
-                      <button
-                        onClick={handleDownloadKey}
-                        style={{
-                          padding: '10px 16px',
-                          backgroundColor: 'var(--primary)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Download Backup Key
-                      </button>
-                    )}
-
-                    <div style={{ 
-                      marginTop: '16px',
-                      padding: '12px',
-                      backgroundColor: '#FFF7ED',
-                      borderRadius: '6px',
-                      border: '1px solid #FED7AA'
-                    }}>
-                      <p style={{ fontSize: '12px', color: '#C2410C', fontWeight: '500', margin: 0 }}>
-                        ⚠️ Never share your private key with anyone!
+                      <p className="text-xs text-green-700 font-semibold mt-3">
+                        ✅ Status: Active
                       </p>
                     </div>
-                  </div>
-                </div>
-              )}
 
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>Password Management</h3>
-                
-                <div style={{ 
-                  padding: '20px', 
-                  backgroundColor: '#F9FAFB', 
-                  borderRadius: '12px', 
-                  border: '1px solid #E5E7EB'
-                }}>
-                  <p style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '16px' }}>
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-6 border border-red-200 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ShieldCheckIcon className="w-5 h-5 text-red-600" />
+                        <h4 className="text-sm font-bold text-gray-900">Private Key</h4>
+                      </div>
+                      
+                      <p className="text-xs text-gray-600 mb-3">
+                        Stored securely in your browser. Used to decrypt shipment details.
+                      </p>
+
+                      <p className="text-xs font-semibold mb-3" style={{ color: hasPrivateKey ? '#10B981' : '#EF4444' }}>
+                        {hasPrivateKey ? '✅ Private key stored in browser' : '❌ Private key not found'}
+                      </p>
+
+                      {hasPrivateKey && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleDownloadKey}
+                          className="px-4 py-2 text-white rounded-xl text-sm font-semibold shadow-md"
+                          style={{ backgroundColor: '#11B0CD' }}
+                        >
+                          Download Backup Key
+                        </motion.button>
+                      )}
+
+                      <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <p className="text-xs text-orange-800 font-medium">
+                          ⚠️ Never share your private key with anyone!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Password Management</h3>
+                  
+                  <p className="text-sm text-gray-600 mb-4">
                     Update your password to keep your account secure.
                   </p>
                   
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setShowPasswordModal(true)}
-                    style={{
-                      padding: '12px 24px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 6px rgba(102, 126, 234, 0.3)',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 6px 12px rgba(102, 126, 234, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(102, 126, 234, 0.3)';
-                    }}
+                    className="px-6 py-3 text-white rounded-xl text-sm font-semibold shadow-md"
+                    style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
                   >
                     Change Password
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
 
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '16px' }}>Danger Zone</h3>
-                
-                <div style={{ 
-                  padding: '20px', 
-                  backgroundColor: '#fef2f2', 
-                  borderRadius: '12px', 
-                  border: '2px solid #fca5a5'
-                }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>
-                    Delete Account
-                  </h4>
-                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px' }}>
+                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-6 border-2 border-red-300 shadow-sm">
+                  <h3 className="text-lg font-bold text-red-700 mb-2">Danger Zone</h3>
+                  <h4 className="text-sm font-semibold text-red-600 mb-2">Delete Account</h4>
+                  <p className="text-xs text-gray-700 mb-4">
                     Once you delete your account, there is no going back. All your data will be permanently removed.
                   </p>
                   
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       if (window.confirm('⚠️ WARNING: Are you ABSOLUTELY SURE you want to delete your account?\n\nThis action CANNOT be undone!\n\nAll your data will be permanently deleted.')) {
                         if (window.confirm('Final confirmation: Type your email mentally and click OK to proceed with account deletion.')) {
@@ -496,53 +390,29 @@ const SettingsPage = () => {
                         }
                       }
                     }}
-                    style={{
-                      padding: '12px 24px',
-                      background: '#dc2626',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 6px rgba(220, 38, 38, 0.3)',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#b91c1c';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 6px 12px rgba(220, 38, 38, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#dc2626';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(220, 38, 38, 0.3)';
-                    }}
+                    className="px-6 py-3 bg-red-600 text-white rounded-xl text-sm font-semibold shadow-md hover:bg-red-700 transition-colors"
                   >
                     Delete My Account
-                  </button>
+                  </motion.button>
                   
-                  <div style={{ 
-                    marginTop: '12px',
-                    padding: '12px',
-                    backgroundColor: '#fff7ed',
-                    borderRadius: '6px',
-                    border: '1px solid #fed7aa'
-                  }}>
-                    <p style={{ fontSize: '12px', color: '#c2410c', fontWeight: '500', margin: 0 }}>
+                  <div className="mt-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <p className="text-xs text-orange-800 font-medium">
                       ⚠️ This will permanently delete your account and all associated data!
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {showPasswordModal && (
-        <ChangePassword onClose={() => setShowPasswordModal(false)} />
-      )}
+      {/* Password Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <ChangePassword onClose={() => setShowPasswordModal(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

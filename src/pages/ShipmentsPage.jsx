@@ -1,14 +1,9 @@
-// src/pages/ShipmentsPage.jsx
-
-
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import MainContent from '../components/MainContent';
 import ShipmentDetailsPanel from '../components/ShipmentDetailsPanel';
 import { getShipments, getStats } from '../services/api';
 import axios from 'axios';
 import { API_URL } from '../config';
-
 
 const ShipmentsPage = () => {
   const [shipments, setShipments] = useState([]);
@@ -18,7 +13,6 @@ const ShipmentsPage = () => {
   const [user, setUser] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
-
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -27,7 +21,6 @@ const ShipmentsPage = () => {
     loadData();
   }, []);
 
-
   async function loadData() {
     try {
       const [shipmentsData, statsData] = await Promise.all([
@@ -35,10 +28,8 @@ const ShipmentsPage = () => {
         getStats()
       ]);
 
-
       setShipments(shipmentsData);
       setStats(statsData);
-
 
       if (shipmentsData.length > 0) {
         setSelectedShipment(shipmentsData[0]);
@@ -50,12 +41,9 @@ const ShipmentsPage = () => {
     }
   }
 
-
-  // Hospital confirmation: mark a shipment as received (Delivered)
   const handleMarkReceived = async (shipmentId) => {
     try {
       setUpdatingId(shipmentId);
-
 
       const stored = localStorage.getItem('user');
       if (!stored) {
@@ -63,14 +51,12 @@ const ShipmentsPage = () => {
         return;
       }
 
-
       const parsedUser = JSON.parse(stored);
       const token = parsedUser?.token;
       if (!token) {
         console.error('No token on stored user');
         return;
       }
-
 
       await axios.put(
         `${API_URL}/api/shipments/${shipmentId}/status`,
@@ -83,8 +69,6 @@ const ShipmentsPage = () => {
         }
       );
 
-
-      // Refresh data so table + stats + details update
       await loadData();
     } catch (error) {
       console.error('Error marking shipment as received:', error);
@@ -93,15 +77,8 @@ const ShipmentsPage = () => {
     }
   };
 
-
   return (
-    <motion.div 
-      style={{ flex: 1, display: 'flex' }}
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="flex-1 flex">
       <MainContent
         shipments={shipments}
         stats={stats}
@@ -113,9 +90,8 @@ const ShipmentsPage = () => {
         updatingId={updatingId}
       />
       {selectedShipment && <ShipmentDetailsPanel shipment={selectedShipment} />}
-    </motion.div>
+    </div>
   );
 };
-
 
 export default ShipmentsPage;

@@ -5,7 +5,6 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ShipmentLocationMap from '../components/ShipmentLocationMap';
 import { API_URL } from '../config';
 
-
 const TelemetryPage = () => {
   const [telemetryData, setTelemetryData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +17,6 @@ const TelemetryPage = () => {
     violations: 0
   });
 
-
   useEffect(() => {
     fetchAllTelemetry();
     
@@ -27,7 +25,6 @@ const TelemetryPage = () => {
     
     return () => clearInterval(interval);
   }, []);
-
 
   const fetchAllTelemetry = async () => {
     try {
@@ -48,13 +45,11 @@ const TelemetryPage = () => {
     }
   };
 
-
   const calculateStats = (data) => {
     if (data.length === 0) {
       setStats({ totalReadings: 0, avgTemp: 0, minTemp: 0, maxTemp: 0, violations: 0 });
       return;
     }
-
 
     const temps = data.map(d => d.temperature);
     const totalReadings = data.length;
@@ -63,20 +58,16 @@ const TelemetryPage = () => {
     const maxTemp = Math.max(...temps).toFixed(1);
     const violations = data.filter(d => d.temperature < 2 || d.temperature > 8).length;
 
-
     setStats({ totalReadings, avgTemp, minTemp, maxTemp, violations });
   };
 
-
   // Get unique shipment IDs for dropdown
   const uniqueShipments = [...new Set(telemetryData.map(t => t.shipmentId))];
-
 
   // Get telemetry data for selected shipment
   const selectedShipmentData = selectedShipmentId 
     ? telemetryData.filter(t => t.shipmentId === selectedShipmentId)
     : [];
-
 
   // Get shipment details from first reading
   const shipmentDetails = selectedShipmentData.length > 0 ? {
@@ -86,11 +77,9 @@ const TelemetryPage = () => {
     status: selectedShipmentData[0].status || 'In Transit'
   } : null;
 
-
   if (loading) {
     return <LoadingSpinner />;
   }
-
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)' }}>
@@ -110,20 +99,19 @@ const TelemetryPage = () => {
         </div>
       </div>
 
-
       {/* Stats Cards */}
       <div style={{ backgroundColor: 'var(--card)', padding: '24px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
           
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+            transition={{ duration: 0.2 }}
             style={{
               padding: '20px',
               backgroundColor: 'var(--bg)',
               borderRadius: '12px',
-              border: '1px solid var(--border)'
+              border: '1px solid var(--border)',
+              cursor: 'pointer'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
@@ -135,16 +123,15 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
-
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}
+            transition={{ duration: 0.2 }}
             style={{
               padding: '20px',
               backgroundColor: '#DBEAFE',
               borderRadius: '12px',
-              border: '1px solid #93C5FD'
+              border: '1px solid #93C5FD',
+              cursor: 'pointer'
             }}
           >
             <p style={{ fontSize: '13px', color: '#1E40AF', margin: '0 0 8px 0' }}>Avg Temperature</p>
@@ -153,16 +140,15 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
-
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}
+            transition={{ duration: 0.2 }}
             style={{
               padding: '20px',
               backgroundColor: '#DBEAFE',
               borderRadius: '12px',
-              border: '1px solid #93C5FD'
+              border: '1px solid #93C5FD',
+              cursor: 'pointer'
             }}
           >
             <p style={{ fontSize: '13px', color: '#1E40AF', margin: '0 0 8px 0' }}>Min Temperature</p>
@@ -171,16 +157,15 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
-
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }}
+            transition={{ duration: 0.2 }}
             style={{
               padding: '20px',
               backgroundColor: '#FEE2E2',
               borderRadius: '12px',
-              border: '1px solid #FCA5A5'
+              border: '1px solid #FCA5A5',
+              cursor: 'pointer'
             }}
           >
             <p style={{ fontSize: '13px', color: '#991B1B', margin: '0 0 8px 0' }}>Max Temperature</p>
@@ -189,16 +174,15 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
-
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            whileHover={{ y: -4, boxShadow: `0 4px 12px ${stats.violations > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)'}` }}
+            transition={{ duration: 0.2 }}
             style={{
               padding: '20px',
               backgroundColor: stats.violations > 0 ? '#FEE2E2' : '#D1FAE5',
               borderRadius: '12px',
-              border: `1px solid ${stats.violations > 0 ? '#FCA5A5' : '#86EFAC'}`
+              border: `1px solid ${stats.violations > 0 ? '#FCA5A5' : '#86EFAC'}`,
+              cursor: 'pointer'
             }}
           >
             <p style={{ fontSize: '13px', color: stats.violations > 0 ? '#991B1B' : '#065F46', margin: '0 0 8px 0' }}>
@@ -209,12 +193,10 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
-
         </div>
       </div>
 
-
-      {/* GPS MAP SECTION - NEW! */}
+      {/* GPS MAP SECTION */}
       {uniqueShipments.length > 0 && (
         <div style={{ backgroundColor: 'var(--card)', padding: '24px', borderBottom: '1px solid var(--border)' }}>
           
@@ -252,7 +234,6 @@ const TelemetryPage = () => {
             </select>
           </div>
 
-
           {/* GPS Map */}
           <div style={{ 
             display: 'flex', 
@@ -273,7 +254,6 @@ const TelemetryPage = () => {
         </div>
       )}
 
-
       {/* Telemetry Table */}
       <div style={{ flex: 1, backgroundColor: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
         
@@ -282,7 +262,6 @@ const TelemetryPage = () => {
             All Temperature Readings
           </h2>
         </div>
-
 
         <div style={{ flex: 1, overflow: 'auto' }}>
           {telemetryData.length === 0 ? (
@@ -315,12 +294,16 @@ const TelemetryPage = () => {
                   return (
                     <motion.tr
                       key={`${reading.shipmentId}-${index}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.02 }}
+                      whileHover={{ 
+                        backgroundColor: isViolation ? '#FEE2E2' : '#F9FAFB',
+                        x: 4,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                      }}
+                      transition={{ duration: 0.2 }}
                       style={{ 
                         borderBottom: '1px solid #F3F4F6',
-                        backgroundColor: isViolation ? '#FEF2F2' : 'transparent'
+                        backgroundColor: isViolation ? '#FEF2F2' : 'transparent',
+                        cursor: 'pointer'
                       }}
                     >
                       <td style={{ padding: '16px 24px', fontWeight: '600', color: 'var(--primary)' }}>
@@ -405,6 +388,5 @@ const TelemetryPage = () => {
     </div>
   );
 };
-
 
 export default TelemetryPage;

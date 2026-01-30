@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { API_URL } from '../config';
 
@@ -174,22 +175,38 @@ const UserManagement = () => {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-          <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#eff6ff', borderRadius: '12px' }}>
+          <motion.div 
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}
+            transition={{ duration: 0.2 }}
+            style={{ textAlign: 'center', padding: '16px', backgroundColor: '#eff6ff', borderRadius: '12px', cursor: 'pointer' }}
+          >
             <p style={{ fontSize: '28px', fontWeight: '700', color: '#3b82f6', margin: '0 0 4px 0' }}>{users.length}</p>
             <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>Total Users</p>
-          </div>
-          <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#f0fdf4', borderRadius: '12px' }}>
+          </motion.div>
+          <motion.div 
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(34, 197, 94, 0.2)' }}
+            transition={{ duration: 0.2 }}
+            style={{ textAlign: 'center', padding: '16px', backgroundColor: '#f0fdf4', borderRadius: '12px', cursor: 'pointer' }}
+          >
             <p style={{ fontSize: '28px', fontWeight: '700', color: '#22c55e', margin: '0 0 4px 0' }}>{users.filter(u => !u.disabled).length}</p>
             <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>Active</p>
-          </div>
-          <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#fef2f2', borderRadius: '12px' }}>
+          </motion.div>
+          <motion.div 
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }}
+            transition={{ duration: 0.2 }}
+            style={{ textAlign: 'center', padding: '16px', backgroundColor: '#fef2f2', borderRadius: '12px', cursor: 'pointer' }}
+          >
             <p style={{ fontSize: '28px', fontWeight: '700', color: '#ef4444', margin: '0 0 4px 0' }}>{users.filter(u => u.disabled).length}</p>
             <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>Disabled</p>
-          </div>
-          <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#faf5ff', borderRadius: '12px' }}>
+          </motion.div>
+          <motion.div 
+            whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(168, 85, 247, 0.2)' }}
+            transition={{ duration: 0.2 }}
+            style={{ textAlign: 'center', padding: '16px', backgroundColor: '#faf5ff', borderRadius: '12px', cursor: 'pointer' }}
+          >
             <p style={{ fontSize: '28px', fontWeight: '700', color: '#a855f7', margin: '0 0 4px 0' }}>{filteredUsers.length}</p>
             <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>Filtered</p>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -215,10 +232,17 @@ const UserManagement = () => {
                 </tr>
               ) : (
                 filteredUsers.map((user, index) => (
-                  <tr key={user._id} style={{ borderTop: index > 0 ? '1px solid #e5e7eb' : 'none', transition: 'background-color 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                  <tr 
+                    key={user._id} 
+                    style={{ 
+                      borderTop: index > 0 ? '1px solid #e5e7eb' : 'none',
+                      transition: 'background-color 0.15s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
                     <td style={{ padding: '16px 24px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {/* ✅ UPDATED: Show photo if exists, otherwise show initial */}
                         {user.profilePhoto ? (
                           <img
                             src={user.profilePhoto}
@@ -288,7 +312,10 @@ const UserManagement = () => {
                     </td>
                     <td style={{ padding: '16px 24px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
                           onClick={() => handleToggleStatus(user._id, user.disabled)}
                           style={{
                             padding: '8px 16px',
@@ -298,15 +325,15 @@ const UserManagement = () => {
                             border: 'none',
                             cursor: 'pointer',
                             backgroundColor: user.disabled ? '#22c55e' : '#f59e0b',
-                            color: 'white',
-                            transition: 'transform 0.15s'
+                            color: 'white'
                           }}
-                          onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                         >
                           {user.disabled ? 'Enable' : 'Disable'}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
                           onClick={() => handleDeleteUser(user._id, user.email)}
                           style={{
                             padding: '8px 16px',
@@ -316,14 +343,11 @@ const UserManagement = () => {
                             border: 'none',
                             cursor: 'pointer',
                             backgroundColor: '#ef4444',
-                            color: 'white',
-                            transition: 'transform 0.15s'
+                            color: 'white'
                           }}
-                          onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                         >
                           Delete
-                        </button>
+                        </motion.button>
                       </div>
                     </td>
                   </tr>

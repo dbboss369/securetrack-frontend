@@ -4,13 +4,11 @@ import {
   TruckIcon, 
   ClockIcon, 
   CheckCircleIcon, 
-  ExclamationTriangleIcon,
-  ArrowTrendingUpIcon
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { API_URL } from '../config';
-
 
 const HospitalDashboard = () => {
   const [stats, setStats] = useState({
@@ -22,17 +20,14 @@ const HospitalDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
 
-
     const fetchStats = async () => {
       try {
-        // Read the same user object that Login.jsx stores
         const stored = localStorage.getItem('user');
         if (!stored) {
           console.error('No user in localStorage');
@@ -40,10 +35,8 @@ const HospitalDashboard = () => {
           return;
         }
 
-
         const parsedUser = JSON.parse(stored);
         const token = parsedUser?.token;
-
 
         if (!token) {
           console.error('No token on stored user');
@@ -51,16 +44,12 @@ const HospitalDashboard = () => {
           return;
         }
 
-
         const response = await axios.get(`${API_URL}/api/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-
         const data = response.data;
 
-
-        // Backend returns { total, inTransit, delivered, pending, issues }
         setStats({
           total: data.total || data.totalShipments || 0,
           inTransit: data.inTransit || 0,
@@ -74,136 +63,78 @@ const HospitalDashboard = () => {
       }
     };
 
-
     fetchStats();
   }, []);
-
 
   const quickStats = [
     { 
       title: 'Total Received', 
       value: stats.total, 
-      change: '+12.3%', 
-      trend: 'up',
       icon: TruckIcon,
-      color: 'var(--primary)'
+      color: '#11B0CD'
     },
     { 
       title: 'In Transit', 
       value: stats.inTransit, 
-      change: '+8.2%', 
-      trend: 'up',
       icon: ClockIcon,
-      color: 'var(--primary-600)'
+      color: '#11B0CD'
     },
     { 
       title: 'Delivered', 
       value: stats.delivered, 
-      change: '+15.1%', 
-      trend: 'up',
       icon: CheckCircleIcon,
-      color: 'var(--primary-700)'
+      color: '#10B981'
     },
     { 
       title: 'Issues', 
       value: stats.issues, 
-      change: '-23.5%', 
-      trend: 'down',
       icon: ExclamationTriangleIcon,
-      color: '#ef4444'
+      color: '#EF4444'
     }
   ];
-
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
-
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)', overflow: 'auto' }}>
+    <div className="flex-1 flex flex-col bg-gray-50 overflow-auto">
       {/* Header */}
-      <div style={{ backgroundColor: 'var(--card)', padding: '24px', borderBottom: '1px solid var(--border)' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
-            Hospital Dashboard
-          </h1>
-          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0', fontSize: '14px' }}>
-            {user?.organization ? `Shipments to ${user.organization}` : 'Your incoming shipments'}
-          </p>
-        </div>
+      <div className="bg-white border-b border-gray-200 p-6">
+        <h1 className="text-2xl font-bold text-gray-900">
+          Hospital Dashboard
+        </h1>
+        <p className="text-gray-600 text-sm mt-1">
+          {user?.organization ? `Shipments to ${user.organization}` : 'Your shipment overview'}
+        </p>
       </div>
 
-
       {/* Main Content */}
-      <div style={{ flex: 1, padding: '24px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>
-            Delivery Overview
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
-            {quickStats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
-                whileHover={{ y: -4, boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}
-                style={{ 
-                  backgroundColor: 'var(--card)', 
-                  border: '1px solid var(--border)', 
-                  borderRadius: '12px', 
-                  padding: '20px',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    backgroundColor: `${stat.color}15`,
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <stat.icon style={{ width: '20px', height: '20px', color: stat.color }} />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <ArrowTrendingUpIcon style={{ 
-                      width: '16px', 
-                      height: '16px', 
-                      color: stat.trend === 'up' ? 'var(--primary-600)' : '#ef4444', 
-                      transform: stat.trend === 'down' ? 'rotate(180deg)' : 'none' 
-                    }} />
-                    <span style={{ 
-                      fontSize: '14px', 
-                      fontWeight: '500', 
-                      color: stat.trend === 'up' ? 'var(--primary-600)' : '#ef4444'
-                    }}>
-                      {stat.change}
-                    </span>
-                  </div>
-                </div>
-                <motion.div 
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.1 + 0.2, type: 'spring', stiffness: 200 }}
-                  style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text)', marginBottom: '4px' }}
-                >
-                  {stat.value}
-                </motion.div>
-                <div style={{ fontSize: '14px', color: 'var(--muted)' }}>
+      <div className="flex-1 p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {quickStats.map((stat, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 cursor-pointer"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
+                <span className="text-sm font-medium text-gray-700">
                   {stat.title}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </span>
+              </div>
+
+              <div className="text-3xl font-bold text-gray-900">
+                {stat.value}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </div>
   );
 };
-
 
 export default HospitalDashboard;
