@@ -13,27 +13,23 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import CreateShipmentPage from './pages/CreateShipmentPage';
 
-const ProtectedRoute = ({ children }) => {
-  const stored = localStorage.getItem('user');
-  let token = null;
 
-  try {
-    if (stored) {
-      const user = JSON.parse(stored);
-      token = user?.token;
-    }
-  } catch (e) {
-    console.error('Error parsing user from localStorage:', e);
-  }
+const ProtectedRoute = ({ children }) => {
+  // ✅ FIXED: Get token from localStorage directly
+  const token = localStorage.getItem('token');
 
   if (!token) {
+    console.log('❌ No token found, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
+  console.log('✅ Token found, allowing access');
   return children;
 };
 
+
 const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
   const stored = localStorage.getItem('user');
   let user = null;
 
@@ -45,16 +41,20 @@ const AdminRoute = ({ children }) => {
     console.error('Error parsing user from localStorage:', e);
   }
 
-  if (!user?.token) {
+  if (!token) {
+    console.log('❌ No token found, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== 'admin') {
+  if (user?.role !== 'admin') {
+    console.log('❌ Not admin, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
+  console.log('✅ Admin access granted');
   return children;
 };
+
 
 function App() {
   return (
@@ -95,5 +95,6 @@ function App() {
     </Router>
   );
 }
+
 
 export default App;
