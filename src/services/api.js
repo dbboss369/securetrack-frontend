@@ -1,16 +1,20 @@
 import { API_URL } from '../config';
 
+
 // Base URL for backend API
 const API_BASE_URL = `${API_URL}/api`;
 
+
 // Helper function to get auth headers
 const getAuthHeaders = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  // ✅ FIXED: Get token directly from localStorage
+  const token = localStorage.getItem('token');
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${user.token || ''}`
+    'Authorization': `Bearer ${token || ''}`
   };
 };
+
 
 // Function to get all shipments from backend (with role-based filtering)
 export const getShipments = async () => {
@@ -26,6 +30,7 @@ export const getShipments = async () => {
   }
 };
 
+
 // Function to get stats (role-based)
 export const getStats = async () => {
   try {
@@ -40,6 +45,7 @@ export const getStats = async () => {
   }
 };
 
+
 // Function to get single shipment by ID
 export const getShipmentById = async (shipmentId) => {
   try {
@@ -53,6 +59,7 @@ export const getShipmentById = async (shipmentId) => {
     throw error;
   }
 };
+
 
 // Function to create new shipment
 export const createShipment = async (shipmentData) => {
@@ -70,6 +77,7 @@ export const createShipment = async (shipmentData) => {
   }
 };
 
+
 // Function to get telemetry data for a shipment
 export const getTelemetry = async (shipmentId) => {
   try {
@@ -83,6 +91,7 @@ export const getTelemetry = async (shipmentId) => {
     throw error;
   }
 };
+
 
 // Function to log sensor data (from Pi or simulator)
 export const logData = async (sensorData) => {
@@ -99,6 +108,7 @@ export const logData = async (sensorData) => {
     throw error;
   }
 };
+
 
 // Function to get customers (for CustomersPage)
 export const getCustomers = async () => {
