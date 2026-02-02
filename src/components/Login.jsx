@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { API_URL } from '../config';
 import logo from '../assets/logo.svg'; 
 
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,6 +12,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -33,15 +35,11 @@ const Login = () => {
         throw new Error(data.error || 'Login failed');
       }
 
-      // ✅ FIXED: Save user with token
-      const userWithToken = {
-        ...data.user,
-        token: data.token
-      };
-
-      localStorage.setItem('user', JSON.stringify(userWithToken));
+      // ✅ FIXED: Store token and user SEPARATELY
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
-      // ✅ CRITICAL: Store hospital encryption keys if user is hospital
+      // ✅ Store hospital encryption keys if user is hospital
       if (data.user.role === 'hospital') {
         if (data.user.privateKey) {
           localStorage.setItem('hospitalPrivateKey', data.user.privateKey);
@@ -57,10 +55,10 @@ const Login = () => {
       }
       
       console.log('✅ User saved:', {
-        hasToken: !!userWithToken.token,
-        role: userWithToken.role,
+        hasToken: !!data.token,
+        role: data.user.role,
         hasPrivateKey: !!data.user.privateKey,
-        hasProfilePhoto: !!userWithToken.profilePhoto
+        hasProfilePhoto: !!data.user.profilePhoto
       });
       
       console.log('✅ Navigating to dashboard...');
@@ -73,6 +71,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
@@ -268,5 +267,6 @@ const Login = () => {
     </div>
   );
 };
+
 
 export default Login;
