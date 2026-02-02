@@ -10,6 +10,7 @@ import ChangePassword from '../components/ChangePassword';
 import ProfilePhoto from '../components/ProfilePhoto';
 import { API_URL } from '../config';
 
+
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [user, setUser] = useState(null);
@@ -17,11 +18,13 @@ const SettingsPage = () => {
   const [hasPrivateKey, setHasPrivateKey] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
+
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
+
 
     const hospitalPublicKey = localStorage.getItem('hospitalPublicKey');
     const hospitalPrivateKey = localStorage.getItem('hospitalPrivateKey');
@@ -34,11 +37,12 @@ const SettingsPage = () => {
     }
   }, []);
 
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userData = JSON.parse(localStorage.getItem('user'));
-        const token = userData?.token;
+        // ✅ FIXED: Get token directly from localStorage
+        const token = localStorage.getItem('token');
         
         if (!token) {
           console.log('⚠️ No token found in localStorage');
@@ -56,6 +60,9 @@ const SettingsPage = () => {
           console.log('📸 Fresh user data from DB:', data.user);
           
           if (data.user) {
+            // Get existing user data
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            
             const updatedUser = {
               ...userData,
               name: data.user.name,
@@ -84,6 +91,7 @@ const SettingsPage = () => {
     fetchUserData();
   }, []);
 
+
   const handleDownloadKey = () => {
     const privateKey = localStorage.getItem('hospitalPrivateKey');
     if (privateKey) {
@@ -97,19 +105,21 @@ const SettingsPage = () => {
     }
   };
 
+
   const handleDeleteAccount = async () => {
     try {
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
+      // ✅ FIXED: Get token directly from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
         alert('User not found');
         return;
       }
 
-      const userData = JSON.parse(userStr);
       const response = await fetch(`${API_URL}/api/auth/delete-account`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${userData.token}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -129,11 +139,13 @@ const SettingsPage = () => {
     }
   };
 
+
   const tabs = [
     { id: 'profile', name: 'Profile', icon: UserIcon },
     { id: 'blockchain', name: 'Blockchain', icon: LinkIcon },
     { id: 'security', name: 'Security', icon: ShieldCheckIcon }
   ];
+
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
@@ -148,6 +160,7 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+
 
       <div className="flex-1 flex overflow-hidden">
         
@@ -175,6 +188,7 @@ const SettingsPage = () => {
           </div>
         </div>
 
+
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-8 bg-white">
           <AnimatePresence mode="wait">
@@ -187,6 +201,7 @@ const SettingsPage = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-4">Profile Picture</label>
                   <ProfilePhoto />
                 </div>
+
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
                   <div>
@@ -231,6 +246,7 @@ const SettingsPage = () => {
               </div>
             )}
 
+
             {/* Blockchain Tab */}
             {activeTab === 'blockchain' && user && (
               <div key="blockchain" className="max-w-3xl space-y-6">
@@ -262,6 +278,7 @@ const SettingsPage = () => {
                   </div>
                 </div>
 
+
                 {user.walletAddress && (
                   <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200 shadow-sm">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">Your Wallet</h3>
@@ -273,11 +290,13 @@ const SettingsPage = () => {
                       </p>
                     </div>
 
+
                     <p className="text-xs text-green-700 font-medium mt-3">
                       ✅ Connected to Polygon Amoy Testnet
                     </p>
                   </div>
                 )}
+
 
                 <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-6 border border-yellow-200 shadow-sm">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Smart Contract</h3>
@@ -291,6 +310,7 @@ const SettingsPage = () => {
                 </div>
               </div>
             )}
+
 
             {/* Security Tab */}
             {activeTab === 'security' && user && (
@@ -315,10 +335,12 @@ const SettingsPage = () => {
                         {publicKey ? publicKey.substring(0, 100) + '...' : 'No public key found'}
                       </div>
 
+
                       <p className="text-xs text-green-700 font-semibold mt-3">
                         ✅ Status: Active
                       </p>
                     </div>
+
 
                     <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-6 border border-red-200 shadow-sm">
                       <div className="flex items-center gap-2 mb-3">
@@ -330,9 +352,11 @@ const SettingsPage = () => {
                         Stored securely in your browser. Used to decrypt shipment details.
                       </p>
 
+
                       <p className="text-xs font-semibold mb-3" style={{ color: hasPrivateKey ? '#10B981' : '#EF4444' }}>
                         {hasPrivateKey ? '✅ Private key stored in browser' : '❌ Private key not found'}
                       </p>
+
 
                       {hasPrivateKey && (
                         <motion.button
@@ -346,6 +370,7 @@ const SettingsPage = () => {
                         </motion.button>
                       )}
 
+
                       <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
                         <p className="text-xs text-orange-800 font-medium">
                           ⚠️ Never share your private key with anyone!
@@ -354,6 +379,7 @@ const SettingsPage = () => {
                     </div>
                   </div>
                 )}
+
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Password Management</h3>
@@ -372,6 +398,7 @@ const SettingsPage = () => {
                     Change Password
                   </motion.button>
                 </div>
+
 
                 <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-6 border-2 border-red-300 shadow-sm">
                   <h3 className="text-lg font-bold text-red-700 mb-2">Danger Zone</h3>
@@ -407,6 +434,7 @@ const SettingsPage = () => {
         </div>
       </div>
 
+
       {/* Password Modal */}
       <AnimatePresence>
         {showPasswordModal && (
@@ -416,5 +444,6 @@ const SettingsPage = () => {
     </div>
   );
 };
+
 
 export default SettingsPage;

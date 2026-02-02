@@ -10,6 +10,7 @@ import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { API_URL } from '../config';
 
+
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     total: 0,
@@ -20,35 +21,34 @@ const AdminDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
 
+
     const fetchStats = async () => {
       try {
-        const stored = localStorage.getItem('user');
-        if (!stored) {
-          console.error('No user in localStorage');
-          setLoading(false);
-          return;
-        }
+        // ✅ FIXED: Get token directly from localStorage
+        const token = localStorage.getItem('token');
 
-        const parsedUser = JSON.parse(stored);
-        const token = parsedUser?.token;
 
         if (!token) {
-          console.error('No token on stored user');
+          console.error('No token found');
           setLoading(false);
           return;
         }
+
 
         const response = await axios.get(`${API_URL}/api/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+
         const data = response.data;
+
 
         setStats({
           total: data.total || data.totalShipments || 0,
@@ -63,8 +63,10 @@ const AdminDashboard = () => {
       }
     };
 
+
     fetchStats();
   }, []);
+
 
   const quickStats = [
     { 
@@ -93,9 +95,11 @@ const AdminDashboard = () => {
     }
   ];
 
+
   if (loading) {
     return <LoadingSpinner />;
   }
+
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50 overflow-auto">
@@ -108,6 +112,7 @@ const AdminDashboard = () => {
           System-wide overview and statistics
         </p>
       </div>
+
 
       {/* Main Content */}
       <div className="flex-1 p-8">
@@ -126,6 +131,7 @@ const AdminDashboard = () => {
                 </span>
               </div>
 
+
               <div className="text-3xl font-bold text-gray-900">
                 {stat.value}
               </div>
@@ -136,5 +142,6 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
 
 export default AdminDashboard;

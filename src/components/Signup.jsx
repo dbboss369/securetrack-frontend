@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 import { API_URL } from '../config';
 import Logo from '../assets/logo.svg';
 
+
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -19,42 +20,52 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+
     console.log('📝 Signup attempt:', formData.email);
+
 
     try {
       let publicKeyPem = null;
       let walletAddress = null;
       let privateKeyPem = null;
 
+
       if (formData.role === 'hospital') {
         const keypair = generateKeyPair();
         publicKeyPem = keypair.publicKey;
         privateKeyPem = keypair.privateKey;
 
+
         console.log('🔑 Keys generated!');
         console.log('   Public key length:', publicKeyPem?.length);
         console.log('   Private key length:', privateKeyPem?.length);
 
+
         if (!window.ethereum) {
           throw new Error('MetaMask is required for hospital registration');
         }
+
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send('eth_requestAccounts', []);
         const signer = await provider.getSigner();
         walletAddress = await signer.getAddress();
 
+
         console.log('🏥 Hospital wallet:', walletAddress);
       }
+
 
       const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
@@ -67,34 +78,37 @@ const Signup = () => {
         }),
       });
 
+
       const data = await res.json();
       console.log('📦 Backend Response:', data);
+
 
       if (!res.ok) {
         throw new Error(data.error || 'Signup failed');
       }
+
 
       if (formData.role === 'hospital' && privateKeyPem) {
         localStorage.setItem('hospitalPrivateKey', privateKeyPem);
         console.log('🔑 Private key stored in localStorage');
       }
 
-      const userWithToken = {
-        ...data.user,
-        token: data.token,
-      };
 
-      localStorage.setItem('user', JSON.stringify(userWithToken));
+      // ✅ FIXED: Store token and user separately
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
       console.log('✅ User saved:', {
-        hasToken: !!userWithToken.token,
-        hasPrivateKey: !!userWithToken.privateKey,
-        role: userWithToken.role
+        hasToken: !!data.token,
+        hasPrivateKey: !!data.user.privateKey,
+        role: data.user.role
       });
       
       console.log('✅ Navigating to dashboard...');
 
-      navigate('/dashboard');
+      // ✅ FIXED: Use window.location for reliable navigation
+      window.location.href = '/dashboard';
+      
     } catch (err) {
       console.error('❌ Signup error:', err);
       setError(err.message);
@@ -102,6 +116,7 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden px-4 py-8">
@@ -132,6 +147,7 @@ const Signup = () => {
         className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"
         style={{ bottom: '-10%', right: '-10%' }}
       />
+
 
       <motion.div
         initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -172,6 +188,7 @@ const Signup = () => {
             </motion.p>
           </div>
 
+
           {/* Error Message */}
           <AnimatePresence>
             {error && (
@@ -186,6 +203,7 @@ const Signup = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
 
           {/* Form */}
           <form onSubmit={handleSignup} className="space-y-4">
@@ -212,6 +230,7 @@ const Signup = () => {
               />
             </motion.div>
 
+
             {/* Email Input */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -235,6 +254,7 @@ const Signup = () => {
               />
             </motion.div>
 
+
             {/* Organization Input */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -257,6 +277,7 @@ const Signup = () => {
                          transition-all duration-300 bg-white/50"
               />
             </motion.div>
+
 
             {/* Role Select */}
             <motion.div
@@ -282,6 +303,7 @@ const Signup = () => {
                 <option value="admin">Admin</option>
               </motion.select>
 
+
               <AnimatePresence>
                 {formData.role === 'hospital' && (
                   <motion.p
@@ -296,6 +318,7 @@ const Signup = () => {
                 )}
               </AnimatePresence>
             </motion.div>
+
 
             {/* Password Input */}
             <motion.div
@@ -332,6 +355,7 @@ const Signup = () => {
               </div>
             </motion.div>
 
+
             {/* Submit Button */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -363,6 +387,7 @@ const Signup = () => {
             </motion.button>
           </form>
 
+
           {/* Sign In Link */}
           <motion.p
             initial={{ opacity: 0 }}
@@ -383,5 +408,6 @@ const Signup = () => {
     </div>
   );
 };
+
 
 export default Signup;

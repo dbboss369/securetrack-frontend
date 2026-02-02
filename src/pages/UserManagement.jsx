@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { API_URL } from '../config';
 
+
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,13 +11,17 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
 
+
   useEffect(() => {
     fetchUsers();
   }, []);
 
+
   const fetchUsers = async () => {
     try {
-      const token = JSON.parse(localStorage.getItem('user')).token;
+      // ✅ FIXED: Get token directly from localStorage
+      const token = localStorage.getItem('token');
+      
       const response = await fetch(`${API_URL}/api/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -36,13 +41,16 @@ const UserManagement = () => {
     }
   };
 
+
   const handleToggleStatus = async (userId, currentStatus) => {
     if (!window.confirm(`Are you sure you want to ${currentStatus ? 'enable' : 'disable'} this user?`)) {
       return;
     }
 
     try {
-      const token = JSON.parse(localStorage.getItem('user')).token;
+      // ✅ FIXED: Get token directly from localStorage
+      const token = localStorage.getItem('token');
+      
       const response = await fetch(`${API_URL}/api/admin/users/${userId}/toggle-status`, {
         method: 'PATCH',
         headers: {
@@ -60,13 +68,16 @@ const UserManagement = () => {
     }
   };
 
+
   const handleDeleteUser = async (userId, userEmail) => {
     if (!window.confirm(`Are you sure you want to DELETE user ${userEmail}? This cannot be undone!`)) {
       return;
     }
 
     try {
-      const token = JSON.parse(localStorage.getItem('user')).token;
+      // ✅ FIXED: Get token directly from localStorage
+      const token = localStorage.getItem('token');
+      
       const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
@@ -85,6 +96,7 @@ const UserManagement = () => {
     }
   };
 
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -92,6 +104,7 @@ const UserManagement = () => {
     const matchesRole = filterRole === 'all' || user.role === filterRole;
     return matchesSearch && matchesRole;
   });
+
 
   const getRoleBadgeColor = (role) => {
     const colors = {
@@ -103,9 +116,11 @@ const UserManagement = () => {
     return colors[role] || { bg: '#f3f4f6', text: '#6b7280' };
   };
 
+
   if (loading) {
     return <LoadingSpinner />;
   }
+
 
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
@@ -116,11 +131,13 @@ const UserManagement = () => {
         <p style={{ color: '#6b7280' }}>Manage all users in the system</p>
       </div>
 
+
       {error && (
         <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '12px' }}>
           <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>
         </div>
       )}
+
 
       <div style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', padding: '24px', marginBottom: '24px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
@@ -146,6 +163,7 @@ const UserManagement = () => {
               onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
             />
           </div>
+
 
           <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
@@ -173,6 +191,7 @@ const UserManagement = () => {
             </select>
           </div>
         </div>
+
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
           <motion.div 
@@ -209,6 +228,7 @@ const UserManagement = () => {
           </motion.div>
         </div>
       </div>
+
 
       <div style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
@@ -360,5 +380,6 @@ const UserManagement = () => {
     </div>
   );
 };
+
 
 export default UserManagement;

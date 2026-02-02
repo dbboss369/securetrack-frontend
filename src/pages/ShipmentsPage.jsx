@@ -5,6 +5,7 @@ import { getShipments, getStats } from '../services/api';
 import axios from 'axios';
 import { API_URL } from '../config';
 
+
 const ShipmentsPage = () => {
   const [shipments, setShipments] = useState([]);
   const [stats, setStats] = useState(null);
@@ -13,6 +14,7 @@ const ShipmentsPage = () => {
   const [user, setUser] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -20,6 +22,7 @@ const ShipmentsPage = () => {
     }
     loadData();
   }, []);
+
 
   async function loadData() {
     try {
@@ -41,20 +44,16 @@ const ShipmentsPage = () => {
     }
   }
 
+
   const handleMarkReceived = async (shipmentId) => {
     try {
       setUpdatingId(shipmentId);
 
-      const stored = localStorage.getItem('user');
-      if (!stored) {
-        console.error('No user in localStorage');
-        return;
-      }
-
-      const parsedUser = JSON.parse(stored);
-      const token = parsedUser?.token;
+      // ✅ FIXED: Get token directly from localStorage
+      const token = localStorage.getItem('token');
+      
       if (!token) {
-        console.error('No token on stored user');
+        console.error('No token found');
         return;
       }
 
@@ -77,6 +76,7 @@ const ShipmentsPage = () => {
     }
   };
 
+
   return (
     <div className="flex-1 flex">
       <MainContent
@@ -93,5 +93,6 @@ const ShipmentsPage = () => {
     </div>
   );
 };
+
 
 export default ShipmentsPage;

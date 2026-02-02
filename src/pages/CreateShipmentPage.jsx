@@ -9,10 +9,12 @@ import {
 import { hybridEncrypt } from '../utils/hybridEncryption';
 import { API_URL } from '../config';
 
+
 const CreateShipmentPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
 
   const [formData, setFormData] = useState({
     vaccine: '',
@@ -23,6 +25,7 @@ const CreateShipmentPage = () => {
     internalNote: '',
   });
 
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -30,21 +33,16 @@ const CreateShipmentPage = () => {
     });
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    try {
-      const stored = localStorage.getItem('user');
-      if (!stored) {
-        setError('Please log in first');
-        setLoading(false);
-        return;
-      }
 
-      const user = JSON.parse(stored);
-      const token = user?.token;
+    try {
+      // ✅ FIXED: Get token directly from localStorage
+      const token = localStorage.getItem('token');
 
       if (!token) {
         setError('Missing auth token. Please log in again.');
@@ -64,13 +62,16 @@ const CreateShipmentPage = () => {
         }
       );
 
+
       const { publicKey, walletAddress } = hospitalRes.data;
+
 
       if (!publicKey) {
         setError('Destination hospital does not have a public key configured.');
         setLoading(false);
         return;
       }
+
 
       // Prepare sensitive data
       const sensitivePayload = {
@@ -83,6 +84,7 @@ const CreateShipmentPage = () => {
         hospitalWallet: walletAddress,
       };
 
+
       console.log('Encrypting with hybrid encryption...');
       
       // Use hybrid encryption (AES + RSA)
@@ -91,7 +93,9 @@ const CreateShipmentPage = () => {
         publicKey
       );
 
+
       console.log('Encryption successful! Sending to backend...');
+
 
       // Send to backend
       await axios.post(
@@ -115,6 +119,7 @@ const CreateShipmentPage = () => {
         }
       );
 
+
       console.log('✅ Shipment created successfully!');
       navigate('/dashboard/shipments');
     } catch (err) {
@@ -124,6 +129,7 @@ const CreateShipmentPage = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <motion.div
@@ -158,6 +164,7 @@ const CreateShipmentPage = () => {
         </div>
       </motion.div>
 
+
       {/* Form Container */}
       <div className="flex-1 p-8 flex items-center justify-center">
         <motion.div
@@ -187,6 +194,7 @@ const CreateShipmentPage = () => {
             </motion.div>
           )}
 
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Vaccine Type */}
             <motion.div
@@ -213,6 +221,7 @@ const CreateShipmentPage = () => {
               />
             </motion.div>
 
+
             {/* Origin & Destination Row */}
             <div className="grid grid-cols-2 gap-4">
               <motion.div
@@ -236,6 +245,7 @@ const CreateShipmentPage = () => {
                 />
               </motion.div>
 
+
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -257,6 +267,7 @@ const CreateShipmentPage = () => {
                 />
               </motion.div>
             </div>
+
 
             {/* Estimated Arrival & Batch Number Row */}
             <div className="grid grid-cols-2 gap-4">
@@ -280,6 +291,7 @@ const CreateShipmentPage = () => {
                 />
               </motion.div>
 
+
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -302,6 +314,7 @@ const CreateShipmentPage = () => {
               </motion.div>
             </div>
 
+
             {/* Internal Note */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -322,6 +335,7 @@ const CreateShipmentPage = () => {
                 onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
               />
             </motion.div>
+
 
             {/* Action Buttons */}
             <motion.div 
@@ -355,6 +369,7 @@ const CreateShipmentPage = () => {
                 )}
               </motion.button>
 
+
               <motion.button
                 type="button"
                 onClick={() => navigate('/dashboard/shipments')}
@@ -371,5 +386,6 @@ const CreateShipmentPage = () => {
     </motion.div>
   );
 };
+
 
 export default CreateShipmentPage;
