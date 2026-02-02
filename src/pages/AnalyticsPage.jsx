@@ -21,8 +21,17 @@ const AnalyticsPage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState('');
+  const [hospitalName, setHospitalName] = useState('');
 
   useEffect(() => {
+    // Get user info
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      setUserRole(user.role);
+      setHospitalName(user.organization || user.hospitalName || '');
+    }
+    
     fetchAnalytics();
     const interval = setInterval(fetchAnalytics, 15000);
     return () => clearInterval(interval);
@@ -31,12 +40,29 @@ const AnalyticsPage = () => {
   const fetchAnalytics = async () => {
     try {
       setError(null);
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
 
-      const telRes = await fetch(`${API_URL}/api/telemetry/all`);
+      // Build URLs with filtering for hospital users
+      let telemetryUrl = `${API_URL}/api/telemetry`;
+      let shipmentsUrl = `${API_URL}/api/shipments`;
+      
+      // Filter by hospital if user is hospital role
+      if (user.role === 'hospital') {
+        const destination = user.organization || user.hospitalName;
+        telemetryUrl += `?destination=${encodeURIComponent(destination)}`;
+        shipmentsUrl += `?destination=${encodeURIComponent(destination)}`;
+      }
+
+      const telRes = await fetch(telemetryUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!telRes.ok) throw new Error('Failed to fetch telemetry');
       const allTelemetryData = await telRes.json();
 
-      const shipRes = await fetch(`${API_URL}/api/shipments/all`);
+      const shipRes = await fetch(shipmentsUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!shipRes.ok) throw new Error('Failed to fetch shipments');
       const allShipments = await shipRes.json();
 
@@ -56,8 +82,9 @@ const AnalyticsPage = () => {
       const violationMap = {};
       const violationDetails = {};
 
+      // Count violations (updated threshold: 20-50°C)
       allTelemetryData.forEach(reading => {
-        if (reading.temperature < 2 || reading.temperature > 8) {
+        if (reading.temperature < 20 || reading.temperature > 50) {
           if (!violationMap[reading.shipmentId]) {
             violationMap[reading.shipmentId] = 0;
             violationDetails[reading.shipmentId] = [];
@@ -166,7 +193,12 @@ const AnalyticsPage = () => {
             <ChartBarIcon style={{ color: '#11B0CD' }} className="w-7 h-7" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Analytics & Reports</h1>
-              <p className="text-gray-600 text-sm mt-1">Temperature violation reports and shipment analytics</p>
+              <p className="text-gray-600 text-sm mt-1">
+                {userRole === 'hospital' 
+                  ? `Temperature violation reports for ${hospitalName}`
+                  : 'Temperature violation reports and shipment analytics'
+                }
+              </p>
             </div>
           </div>
         </div>
@@ -174,7 +206,12 @@ const AnalyticsPage = () => {
           <div className="text-center p-10 bg-white rounded-2xl shadow-lg">
             <InboxIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Shipment Data Yet</h3>
-            <p className="text-gray-600 text-sm mb-4">Create your first shipment to see analytics here.</p>
+            <p className="text-gray-600 text-sm mb-4">
+              {userRole === 'hospital' 
+                ? `No shipments to ${hospitalName} yet.`
+                : 'Create your first shipment to see analytics here.'
+              }
+            </p>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -214,7 +251,12 @@ const AnalyticsPage = () => {
             <ChartBarIcon style={{ color: '#11B0CD' }} className="w-7 h-7" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Analytics & Reports</h1>
-              <p className="text-gray-600 text-sm mt-1">Temperature violation reports and shipment analytics</p>
+              <p className="text-gray-600 text-sm mt-1">
+                {userRole === 'hospital' 
+                  ? `Violation reports for ${hospitalName}`
+                  : 'Temperature violation reports and shipment analytics'
+                }
+              </p>
             </div>
           </div>
           <motion.button 
@@ -273,7 +315,7 @@ const AnalyticsPage = () => {
             <div className="p-16 text-center">
               <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Violations Found</h3>
-              <p className="text-gray-600 text-sm">All shipments are maintaining proper temperature ranges (2-8°C)</p>
+              <p className="text-gray-600 text-sm">All shipments are maintaining proper temperature ranges (20-50°C)</p>
             </div>
           ) : (
             <table className="w-full">
