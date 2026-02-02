@@ -7,12 +7,12 @@ const Layout = () => {
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, sans-serif' }}>
       <Sidebar />
       
-      {/* Main content area with left margin for fixed sidebar */}
+      {/* Main content area */}
       <div style={{
-        marginLeft: '256px',  // ← ADDED: Match sidebar width
-        flex: 1,              // ← ADDED: Take remaining space
-        overflow: 'auto',     // ← ADDED: Allow scrolling
-        height: '100vh'       // ← ADDED: Full viewport height
+        marginLeft: '256px',  
+        flex: 1,              
+        overflow: 'auto',     
+        height: '100vh'       
       }}>
         <Outlet />
       </div>

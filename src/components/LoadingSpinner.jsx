@@ -19,7 +19,7 @@ const LoadingSpinner = () => {
       
       <div
         style={{
-          position: 'fixed',           // NEW: Fixed positioning
+          position: 'fixed',           
           top: 0,
           left: 0,
           right: 0,
@@ -29,11 +29,11 @@ const LoadingSpinner = () => {
           alignItems: 'center',
           justifyContent: 'center',
           gap: '24px',
-          backgroundColor: 'var(--bg)', // NEW: Background color
-          zIndex: 9999                   // NEW: On top of everything
+          backgroundColor: 'var(--bg)', 
+          zIndex: 9999                   
         }}
       >
-        {/* Three Bouncing Dots */}
+        {/* Three Dots */}
         <div style={{ display: 'flex', gap: '8px' }}>
           <div
             style={{

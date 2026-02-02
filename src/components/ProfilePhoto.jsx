@@ -6,7 +6,7 @@ const ProfilePhoto = () => {
   const [uploading, setUploading] = useState(false);
   const [user, setUser] = useState(null);
 
-  // ✅ Load photo on mount and listen for updates
+  
   useEffect(() => {
     const loadPhoto = () => {
       const userData = JSON.parse(localStorage.getItem('user'));
@@ -21,10 +21,10 @@ const ProfilePhoto = () => {
       }
     };
 
-    // Load on mount
+    
     loadPhoto();
 
-    // ✅ Listen for storage updates (from Settings.jsx fetch)
+    
     const handleStorageChange = () => {
       console.log('🔔 ProfilePhoto: Storage updated, reloading...');
       loadPhoto();
@@ -77,7 +77,7 @@ const ProfilePhoto = () => {
           userData.profilePhoto = photoData;
           localStorage.setItem('user', JSON.stringify(userData));
           
-          // 🔔 Notify other components
+          //  Notify components
           window.dispatchEvent(new Event('profilePhotoUpdated'));
           
           alert('✅ Profile photo updated successfully!');
@@ -117,7 +117,7 @@ const ProfilePhoto = () => {
         userData.profilePhoto = null;
         localStorage.setItem('user', JSON.stringify(userData));
         
-        // 🔔 Notify other components
+        // Notify  components
         window.dispatchEvent(new Event('profilePhotoUpdated'));
         
         alert('✅ Profile photo removed successfully!');
