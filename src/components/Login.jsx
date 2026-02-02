@@ -35,7 +35,7 @@ const Login = () => {
         throw new Error(data.error || 'Login failed');
       }
 
-      // ✅ FIXED: Store token and user SEPARATELY
+      // ✅ Store token and user SEPARATELY
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
@@ -63,7 +63,9 @@ const Login = () => {
       
       console.log('✅ Navigating to dashboard...');
 
-      navigate('/dashboard');
+      // ✅ FIXED: Use window.location for reliable navigation
+      window.location.href = '/dashboard';
+      
     } catch (err) {
       console.error('❌ Error:', err);
       setError(err.message);
