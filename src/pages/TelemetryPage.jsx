@@ -5,6 +5,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ShipmentLocationMap from '../components/ShipmentLocationMap';
 import { API_URL } from '../config';
 
+
 const TelemetryPage = () => {
   const [telemetryData, setTelemetryData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +19,7 @@ const TelemetryPage = () => {
     maxTemp: 0,
     violations: 0
   });
+
 
   useEffect(() => {
     // Get user info from localStorage
@@ -34,6 +36,7 @@ const TelemetryPage = () => {
     
     return () => clearInterval(interval);
   }, []);
+
 
   const fetchTelemetry = async () => {
     try {
@@ -73,11 +76,13 @@ const TelemetryPage = () => {
     }
   };
 
+
   const calculateStats = (data) => {
     if (data.length === 0) {
       setStats({ totalReadings: 0, avgTemp: 0, minTemp: 0, maxTemp: 0, violations: 0 });
       return;
     }
+
 
     const temps = data.map(d => d.temperature);
     const totalReadings = data.length;
@@ -86,16 +91,20 @@ const TelemetryPage = () => {
     const maxTemp = Math.max(...temps).toFixed(1);
     const violations = data.filter(d => d.temperature < 20 || d.temperature > 50).length;
 
+
     setStats({ totalReadings, avgTemp, minTemp, maxTemp, violations });
   };
 
+
   // Get unique shipment IDs for dropdown
   const uniqueShipments = [...new Set(telemetryData.map(t => t.shipmentId))];
+
 
   // Get telemetry data for selected shipment
   const selectedShipmentData = selectedShipmentId 
     ? telemetryData.filter(t => t.shipmentId === selectedShipmentId)
     : [];
+
 
   // Get shipment details from first reading
   const shipmentDetails = selectedShipmentData.length > 0 ? {
@@ -105,9 +114,11 @@ const TelemetryPage = () => {
     status: selectedShipmentData[0].status || 'In Transit'
   } : null;
 
+
   if (loading) {
     return <LoadingSpinner />;
   }
+
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg)' }}>
@@ -129,6 +140,7 @@ const TelemetryPage = () => {
           </div>
         </div>
       </div>
+
 
       {/* Stats Cards */}
       <div style={{ backgroundColor: 'var(--card)', padding: '24px', borderBottom: '1px solid var(--border)' }}>
@@ -154,6 +166,7 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
+
           <motion.div
             whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}
             transition={{ duration: 0.2 }}
@@ -170,6 +183,7 @@ const TelemetryPage = () => {
               {stats.avgTemp}°C
             </p>
           </motion.div>
+
 
           <motion.div
             whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)' }}
@@ -188,6 +202,7 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
+
           <motion.div
             whileHover={{ y: -4, boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }}
             transition={{ duration: 0.2 }}
@@ -204,6 +219,7 @@ const TelemetryPage = () => {
               {stats.maxTemp}°C
             </p>
           </motion.div>
+
 
           <motion.div
             whileHover={{ y: -4, boxShadow: `0 4px 12px ${stats.violations > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)'}` }}
@@ -224,8 +240,10 @@ const TelemetryPage = () => {
             </p>
           </motion.div>
 
+
         </div>
       </div>
+
 
       {/* GPS MAP SECTION */}
       {uniqueShipments.length > 0 && (
@@ -265,6 +283,7 @@ const TelemetryPage = () => {
             </select>
           </div>
 
+
           {/* GPS Map */}
           <div style={{ 
             display: 'flex', 
@@ -285,26 +304,33 @@ const TelemetryPage = () => {
         </div>
       )}
 
+
       {/* Telemetry Table */}
       <div style={{ flex: 1, backgroundColor: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
         
         <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
-            {userRole === 'hospital' ? `Temperature Readings for ${hospitalName}` : 'All Temperature Readings'}
+            {selectedShipmentId 
+              ? `Temperature Readings for ${selectedShipmentId}` 
+              : (userRole === 'hospital' ? `Temperature Readings for ${hospitalName}` : 'All Temperature Readings')
+            }
           </h2>
         </div>
 
+
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {telemetryData.length === 0 ? (
+          {(selectedShipmentId ? selectedShipmentData : telemetryData).length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🌡️</div>
               <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)', marginBottom: '8px' }}>
                 No Telemetry Data Available
               </h3>
               <p style={{ fontSize: '14px', color: 'var(--muted)' }}>
-                {userRole === 'hospital' 
-                  ? `No shipments to ${hospitalName} yet.`
-                  : 'Start the simulator to see temperature readings here.'
+                {selectedShipmentId 
+                  ? `No temperature readings for ${selectedShipmentId} yet.`
+                  : (userRole === 'hospital' 
+                    ? `No shipments to ${hospitalName} yet.`
+                    : 'Start the simulator to see temperature readings here.')
                 }
               </p>
             </div>
@@ -322,7 +348,7 @@ const TelemetryPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {telemetryData.map((reading, index) => {
+                {(selectedShipmentId ? selectedShipmentData : telemetryData).map((reading, index) => {
                   const isViolation = reading.temperature < 20 || reading.temperature > 50;
                   
                   return (
@@ -422,5 +448,6 @@ const TelemetryPage = () => {
     </div>
   );
 };
+
 
 export default TelemetryPage;
